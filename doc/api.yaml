@@ -1,0 +1,888 @@
+openapi: 3.0.3
+info:
+  title: WASAText API
+  description: |
+    Connect with your friends effortlessly using WASAText! Send and receive
+    messages, whether one-on-one or in groups, all from the convenience of your
+    PC. Enjoy seamless conversations with text or GIFs and easily stay in touch
+    through your private chats or group discussions.
+  version: 0.0.1
+tags:
+  - name: login
+    description: operations related to login
+  - name: info user
+    description: operations related to information of user
+  - name: conversations
+    description: operations related to conversations
+  - name: message
+    description: operations related to conversation's message
+  - name: group
+    description: operations related to conversation's group
+  - name: conversation
+    description: operations related to a single conversation
+  - name: comment
+    description: operations related to massage's comment
+  - name: users
+    description: operation related to user's list
+
+components:
+  schemas:
+    # Duplicato da doLogin per evitare di modificare doLogin con una ref
+    Login:
+      title: login name
+      description: user's login
+      type: string
+      example: maria
+      pattern: '^.*?$'
+      minLength: 3
+      maxLength: 16
+    UserName:
+      title: User name
+      description: user's complete name
+      type: string
+      example: Maria
+      pattern: '^.*?$'
+      minLength: 3
+      maxLength: 16
+    UserPhoto:
+      title: User photo
+      description: profile photo
+      type: string
+      format: binary
+      minLength: 64
+      maxLength: 524288
+    User:
+      title: User
+      description: user name and photo
+      type: object
+      properties:
+        login:
+          $ref: "#/components/schemas/Login"
+        username:
+          $ref: "#/components/schemas/UserName"
+        userphoto:
+          $ref: "#/components/schemas/UserPhoto"
+    ComID:
+      title: ID
+      description: ID of object Comment
+      type: integer
+      minimum: 0
+      example: 1
+    Contents:
+      title: Contents
+      description: message's content, text or image
+      type: object
+      properties:
+        category:
+          description: message type
+          type: string
+          enum:
+            - text
+            - image
+            - mixed
+        attach:
+          description: message content
+          type: string
+          pattern: '.*'
+          minLength: 1
+          maxLength: 524288
+          oneOf:
+            - format: binary
+            - format: text
+    Received:
+      title: Received
+      description: message received for specific user
+      type: object
+      properties:
+        login:
+          $ref: "#/components/schemas/Login"
+        username:
+          $ref: "#/components/schemas/UserName"
+        received:
+          description: true if message received by specific user
+          type: string
+          enum:
+            - "true"
+            - "false"
+    Read:
+      title: Read
+      description: message read for specific user
+      type: object
+      properties:
+        login:
+          $ref: "#/components/schemas/Login"
+        username:
+          $ref: "#/components/schemas/UserName"
+        read:
+          description: true if message read by specific user
+          type: string
+          enum:
+            - "true"
+            - "false"
+    MesID:
+      title: ID
+      description: ID of object Message
+      type: integer
+      minimum: 0
+      example: 1
+    Message:
+      title: Message
+      description: This object represent a single message, text or GIF
+      type: object
+      properties:
+        mesid:
+          $ref: "#/components/schemas/MesID"
+        conid:
+          $ref: "#/components/schemas/ConID"
+        timestamp:
+          description: time stamp as a string
+          type: string
+          format: date-time
+          minLength: 14
+          maxLength: 35
+        contents:
+          $ref: "#/components/schemas/Contents"
+        isForwarded:
+          description: message is forwarded if value > 0
+          type: integer
+          minimum: 0
+        username:
+          $ref: "#/components/schemas/UserName"
+        login:
+          $ref: "#/components/schemas/Login"
+        receivedarray:
+          description: checkmark for received message
+          type: array
+          minItems: 0
+          maxItems: 32
+          items: 
+            $ref: "#/components/schemas/Received"
+        readarray:
+          description: checkmark for read message
+          type: array
+          minItems: 0
+          maxItems: 32
+          items:
+            $ref: "#/components/schemas/Read"
+        comment:
+          description: list of comments
+          type: array
+          minItems: 0
+          maxItems: 32
+          items:
+            $ref: "#/components/schemas/ComID"
+    ConID:
+      title: ID
+      description: ID of object Converstion
+      type: integer
+      minimum: 0
+      example: 1
+    ConShort:
+      title: Preview
+      description: Preview of conversation with last message of conversation
+      type: object
+      properties:
+        conid:
+          $ref: "#/components/schemas/ConID"
+        categoryinfo:
+          description: define if it is a normal conversation or a group
+          type: string
+          enum:
+            - conversation
+            - group
+        name:
+          description: group name
+          type: string
+          pattern: "^.*?$"
+          minLength: 1
+          maxLength: 32
+        photo:
+          description: profile photo or group photo
+          type: string
+          format: binary
+          minLength: 64
+          maxLength: 524288
+        sender:
+          description: name of the sender of the message
+          type: string
+          pattern: "^.*?$"
+          minLength: 1
+          maxLength: 32
+        toread:
+          description: group name
+          type: string
+          pattern: "^.*?$"
+          minLength: 1
+          maxLength: 32
+        message:
+          $ref: "#/components/schemas/Message"
+    ConversationInfo:
+      title: Conversation
+      description: This object represent info on a single conversation or group
+      type: object
+      properties:
+        conid:
+          $ref: "#/components/schemas/ConID"
+        categoryinfo:
+          description: define if it is a normal conversation or a group
+          type: string
+          enum:
+            - conversation
+            - group
+        name:
+          description: group name
+          type: string
+          pattern: "^.*?$"
+          minLength: 1
+          maxLength: 32
+        photo:
+          description: profile photo or group photo
+          type: string
+          format: binary
+          minLength: 64
+          maxLength: 524288
+        # lista utenti?
+        users:
+          description: user in conversation or group
+          type: array
+          minItems: 1
+          maxItems: 32
+          items:
+            $ref: "#/components/schemas/User"
+        # messaggi
+    Conversation:
+      title: Conversation
+      description: This object represent a single conversation or group
+      type: object
+      properties:
+        conid:
+          $ref: "#/components/schemas/ConID"
+        categoryinfo:
+          description: define if it is a normal conversation or a group
+          type: string
+          enum:
+            - conversation
+            - group
+        name:
+          description: group name
+          type: string
+          pattern: "^.*?$"
+          minLength: 1
+          maxLength: 32
+        photo:
+          description: profile photo or group photo
+          type: string
+          format: binary
+          minLength: 64
+          maxLength: 524288
+        users:
+          description: user in conversation or group
+          type: array
+          minItems: 1
+          maxItems: 32
+          items:
+            $ref: "#/components/schemas/UserName"
+        messages:
+          description: all messages in the conversation
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/Message"
+  securitySchemes:
+    Authorization:
+      type: http
+      scheme: bearer
+      bearerFormat: doLogin
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+  parameters:
+    UserGroup:
+      schema:
+        type: boolean
+        default: false
+      name: showgroups
+      in: query
+      description: showlist of groups of authenticated user
+      required: false
+    Start:
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+        example: 5
+      name: start
+      in: query
+      required: false
+      description: start of items in response array, used for pagination
+    Limit:
+      schema:
+        type: integer
+        minimum: 50
+        maximum: 100
+        default: 50
+        example: 55
+      name: limit
+      in: query
+      required: false
+      description: limit of number of items returned, used for pagination
+    ConversationID:
+      schema:
+        type: integer
+        minimum: 0
+        example: 1
+        readOnly: true
+      name: convid
+      in: path
+      required: true
+      description: Conversation ID
+    MessageID:
+      schema:
+        type: integer
+        minimum: 0
+        example: 1
+        readOnly: true
+      name: mesid
+      in: path
+      required: true
+      description: Message ID
+    Search:
+      schema:
+        type: string
+        pattern: '.*'
+        minLength: 0
+        maxLength: 16
+      name: search
+      in: query
+      required: false
+      description: fragment of username or login to search for users
+paths:
+  /session:
+    post:
+      tags: ["login"]
+      summary: Logs in the user
+      description: |-
+        If the user does not exist, it will be created, and an identifier is
+        returned. If the user exists, the user identifier is returned.
+      operationId: doLogin
+      requestBody:
+        description: User details
+        content:
+          application/json:
+            schema:
+              description: login name
+              type: object
+              properties:
+                name:
+                  description: name of the user, must contain at least one letter
+                  type: string
+                  example: Maria
+                  pattern: '^.*[A-Za-z].*$'
+                  minLength: 3
+                  maxLength: 16
+        required: true
+      responses:
+        '201':
+          description: User log-in action successful
+          content:
+            application/json:
+              schema:
+                description: user identifier
+                type: object
+                properties:
+                  identifier:
+                    description: the string identifying uniquely the user
+                    # change here if you decide to use an integer
+                    # or any other type of identifier
+                    type: string
+                    example: "abcdef012345abcdef0123451234567a"
+                    pattern: '[A-Fa-f0-9]+'
+                    minLength: 32
+                    maxLength: 32
+        '400':
+          description: Bad request, failed login or bad parameters
+  /users:
+    get:
+      tags: ["users"]
+      security:
+        - Authorization: []
+      summary: search between all users
+      description: |
+        Obtain the list of all users, if provided the username or login name
+        should match the fragment given in search parameter
+      operationId: getUsers
+      parameters:
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/UserGroup"
+      responses:
+        "200":
+          description: list of users matching the search 
+          content:
+            application/json:
+              schema:
+                description: list of object User
+                type: array
+                minItems: 0
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/User"
+        '204':
+          description: search produced no rows
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /info:
+    get:
+      tags: ["info user"]
+      security:
+        - Authorization: []
+      summary: user info
+      description: get all information about user
+      operationId: getUserInfo
+      responses:
+        "200":
+          description: user information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '400':
+          description: Bad request
+  /info/username:
+    put:
+      tags: ["info user"]
+      security:
+        - Authorization: []
+      summary: username
+      description: |
+        Set your username or modify it
+      operationId: setMyUserName
+      requestBody:
+        description: my username
+        required: true
+        content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/UserName'
+      responses:
+        "204":
+          description: name setted
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        '400':
+          description: Bad request
+        "406":
+          description: name not valid (not acceptable)
+  /info/userphoto:
+    put:
+      tags: ["info user"]
+      security:
+        - Authorization: []
+      summary: profile photo
+      description: |
+        Set your profile photo or modify it
+      operationId: setMyPhoto
+      requestBody:
+        description: profile photo to add/change
+        required: true
+        content:
+          image/gif:
+            schema:
+              $ref: "#/components/schemas/UserPhoto"
+      responses:
+        "204":
+          description: photo setted
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        '400':
+          description: Bad request
+        "406":
+          description: image not valid (not acceptable)
+  /conversations:
+    get:
+      tags: ["conversations"]
+      security:
+        - Authorization: []
+      summary: list all conversations
+      description: |
+        Obtain the list of all conversations, with the username or group name,
+        profile photo and last message date and time
+      operationId: getMyConversations
+      responses:
+        "200":
+          description: list of preview of all conversations 
+          content:
+            application/json:
+              schema:
+                description: list of object ConShort
+                type: array
+                minItems: 0
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/ConShort"
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+    post:
+      tags: ["conversations", "message"]
+      security:
+        - Authorization: []
+      summary: send new message
+      description: |
+        send new meassage in a conversation, or group, with a given username or
+        group name, if the conversation with the username doesn't exist create
+        it
+      operationId: sendMessage
+      parameters:
+        - name: conversation
+          in: query
+          required: true
+          description: conversation id or username
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/ConID"
+              - $ref: "#/components/schemas/UserName"
+        - name: reply
+          in: query
+          required: false
+          description: message id of the message to reply to
+          schema:
+            $ref: "#/components/schemas/MesID"
+      requestBody:
+        description: message body
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              description: content of the form data
+              properties:
+                image:
+                  description: A photo
+                  type: string
+                  format: binary
+                  minLength: 64
+                  maxLength: 524288
+                text:
+                  description: text message body
+                  type: string
+                  pattern: '.*'
+                  example: 'Hello to everyone!'
+                  minLength: 1
+                  maxLength: 8192
+            encoding:
+              photo:
+                contentType: image/gif
+              text:
+                contentType: text/plain
+      responses:
+        "201":
+          description: message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        # "302": moved, redirect
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: conversation or user not found
+        "406": 
+          description: name or message values not acceptable
+  /conversations/group:
+    put:
+      tags: ["conversations", "group"]
+      security:
+        - Authorization: []
+      summary: add new user to a group
+      description: |
+        select usernames to add to a group, if the group doesn't exist, create
+        it
+      operationId: addToGroup
+      parameters:
+        - name: users
+          in: query
+          required: true
+          description: user to add
+          schema:
+            type: array
+            minItems: 1
+            maxItems: 32
+            items:
+              $ref: "#/components/schemas/UserName"
+        - name: groupID
+          in: query
+          required: false
+          description: group id or not required for a new group
+          schema:
+            $ref: "#/components/schemas/ConID"
+      responses:
+        "200":
+          description: users added to the group
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ID group
+                properties:
+                  identifierID:
+                    $ref: "#/components/schemas/ConID"
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: user or group not found
+        "406":
+          description: number of users in the group exceed the maximum number, not acceptable
+  /conversations/byid/{convid}:
+    parameters:
+      - $ref: "#/components/parameters/ConversationID"
+    get:
+      tags: ["conversation"]
+      security:
+        - Authorization: []
+      summary: list all message in a conversation
+      description: |
+        Obtain the list of all messages, with the username of the sender,
+        timestamp and checkmarks
+      operationId: getConversation
+      parameters:
+        - $ref: "#/components/parameters/Start"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: list of object Messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "406": 
+          description: start or limit values not acceptable
+    put:
+      tags: ["group"]
+      security:
+        - Authorization: []
+      summary: leave a group
+      description: |
+        leave a group
+      operationId: leaveGroup
+      responses:
+        "204":
+          description: You left the group
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: the conversation is not a group
+  /conversations/byid/{convid}/name:
+    put:
+      tags: ["group"]
+      security:
+        - Authorization: []
+      summary: set group name
+      description: |
+        Set the name of the group or modify it
+      operationId: setGroupName
+      parameters:
+        - $ref: "#/components/parameters/ConversationID"
+        - name: name
+          in: query
+          required: true
+          description: group name
+          schema:
+            type: string
+            pattern: '.*'
+            minLength: 1
+            maxLength: 32
+      responses:
+        "204":
+          description: name setted
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: conversation is not a group
+        "406": 
+          description: name values not acceptable
+  /conversations/byid/{convid}/photo:
+    put:
+      tags: ["group"]
+      security:
+        - Authorization: []
+      summary: set group photo
+      description: |
+        Set the photo of the group or modify it
+      operationId: setGroupPhoto
+      parameters:
+        - $ref: "#/components/parameters/ConversationID"
+      requestBody:
+        description: group photo to add/change
+        required: true
+        content:
+          image/gif:
+            schema:
+              description: group photo
+              type: string
+              format: binary
+              minLength: 64
+              maxLength: 524288
+      responses:
+        "204":
+          description: photo setted
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: conversation is not a group
+        "406": 
+          description: name values not acceptable
+  /conversations/byid/{convid}/info:
+    get:
+      tags: ["group"]
+      security:
+        - Authorization: []
+      summary: get group info
+      description: |
+        Get the photo and the name of the group
+      operationId: getGroupInfo
+      parameters:
+        - $ref: "#/components/parameters/ConversationID"
+      responses:
+        "200":
+          description: list of object Group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationInfo"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: conversation id not found
+        "406":
+          description: conversation id is not a group
+  /conversations/byid/{convid}/message/{mesid}:
+    parameters:
+        - $ref: "#/components/parameters/ConversationID"
+        - $ref: "#/components/parameters/MessageID"
+    post:
+      tags: ["message"]
+      security:
+        - Authorization: []
+      summary: forward message
+      description: |
+        forward meassage to a conversation, or group, with a given username or
+        group name, if the conversation with the username doesn't exist create
+        it
+      operationId: forwardMessage
+      requestBody:
+        description: conversation or user to forward to
+        required: true
+        content:
+          text/plain:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/ConID"
+                - $ref: "#/components/schemas/UserName"
+      responses:
+        "200":
+          description: message forwarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConID"
+        # "302": moved, redirect
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: conversation or user not found
+        "406": 
+          description: username values not acceptable
+    delete:
+      tags: ["message"]
+      security:
+        - Authorization: []
+      summary: delete message
+      description: |
+        delete a message in a conversation
+      operationId: deleteMessage
+      responses:
+        "204":
+          description: message deleted
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          description: it is forbidden to delete not owned messages
+        "404":
+          description: message or conversation id not found
+  /conversations/byid/{convid}/message/{mesid}/comment:
+    parameters:
+        - $ref: "#/components/parameters/ConversationID"
+        - $ref: "#/components/parameters/MessageID"
+    post:
+      tags: ["comment"]
+      security:
+        - Authorization: []
+      summary: comment message
+      description: |
+        react to a meassage with emoji
+      operationId: commentMessage
+      requestBody:
+        description: reaction emoji
+        required: true
+        content:
+          text/plain:
+            schema:
+              description: emoji
+              type: string
+              minLength: 1
+              maxLength: 4
+              pattern: '^.*$'
+      responses:
+        "200":
+          description: message commented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComID"
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: message id or conversation id not found
+        "406": 
+          description: emoji values not acceptable
+    delete:
+      tags: ["comment"]
+      security:
+        - Authorization: []
+      summary: uncomment message
+      description: |
+        delete authenticated user reaction (if present) to a message
+      operationId: uncommentMessage
+      responses:
+        "204":
+          description: comment deleted
+        '400':
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: message or conversation id not found
