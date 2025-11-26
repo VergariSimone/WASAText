@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-// AppDatabase è l'interfaccia principale per tutte le operazioni sul DB
+// INTERFACCIA PRINCIPALE PER TUTTE LE CRUD DEL DATABASE
 type AppDatabase interface {
 	GetName(token string) (string, error)
 	GetToken(name string) (string, error)
