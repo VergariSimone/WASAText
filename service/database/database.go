@@ -51,7 +51,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 
 	// CONTROLLO SE LA TABELLA ESISTE, ALTRIMENTI LA CREO
 	var tableName string
-	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Comments';`).Scan(&tableName)
+	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Comments';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
 		sqlStmt := `CREATE TABLE IF NOT EXISTS "Comments" (
 						"id_com"	INTEGER NOT NULL,
