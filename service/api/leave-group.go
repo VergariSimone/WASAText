@@ -9,7 +9,7 @@ import (
 )
 
 func (rt *_router) leaveGroup(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// ESTRAZIONE TOKEM 
+	// ESTRAZIONE TOKEM
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
 	// PARSING ID CONV
@@ -19,7 +19,6 @@ func (rt *_router) leaveGroup(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	
 	if !rt.isGroup(token, conID) {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -35,10 +34,9 @@ func (rt *_router) leaveGroup(w http.ResponseWriter, r *http.Request, ps httprou
 	w.WriteHeader(http.StatusNoContent)
 }
 
-
 // FUNZIONI DI SUPORTO
 
-// CONVERSIONE STRING IN INT 
+// CONVERSIONE STRING IN INT
 func parseConversationID(param string) (int, error) {
 	return strconv.Atoi(param)
 }

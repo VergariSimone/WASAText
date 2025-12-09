@@ -2,7 +2,7 @@ package database
 
 import "fmt"
 
-// --- Aggiornamento dati utente 
+// --- Aggiornamento dati utente
 
 // aggiorna lo username dell'utente e controlla che il nome non sia già utilizzato da altri utenti
 func (db *appdbimpl) SetMyUsername(name string, token string) error {
@@ -24,10 +24,7 @@ func (db *appdbimpl) SetMyUserphoto(photo []byte, token string) error {
 	return err
 }
 
-
-
-
-// --- Gestione conversazioni 
+// --- Gestione conversazioni
 
 // crea una nuova conversazione tra due utenti o ritorna quella esistente
 func (db *appdbimpl) SetConversation(token, category, receiver, convname string, photo []byte) (int, error) {
@@ -48,7 +45,7 @@ func (db *appdbimpl) SetConversation(token, category, receiver, convname string,
 	}
 
 	if count > 0 {
-		// Se esiste, restituisce id 
+		// Se esiste, restituisce id
 		err := db.c.QueryRow(`
 			SELECT uc1.id_con
 			FROM UsersConversations uc1, UsersConversations uc2, Conversations c
@@ -91,20 +88,18 @@ func (db *appdbimpl) SetConversation(token, category, receiver, convname string,
 
 // invia un messaggio in una conversazione
 func (db *appdbimpl) SendMessage(conID int, token, text, category string, photo []byte, replyToID int) error {
-	
+
 	_, err := db.c.Exec(`INSERT INTO Messages VALUES(NULL, ?, (SELECT login FROM Users WHERE token=?), CURRENT_TIMESTAMP, ?, ?, ?)`,
 		conID, token, text, photo, category)
 	if err != nil {
 		return err
 	}
 
-	
 	var msgID int
 	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&msgID)
 	if err != nil {
 		return err
 	}
-
 
 	rows, err := db.c.Query(`SELECT login FROM UsersConversations WHERE id_con=?`, conID)
 	if err != nil {
@@ -141,10 +136,7 @@ func (db *appdbimpl) SendMessage(conID int, token, text, category string, photo 
 	return nil
 }
 
-
-
-
-// --- Gestione gruppi 
+// --- Gestione gruppi
 
 // SetGroup crea un nuovo gruppo con messaggio iniziale
 func (db *appdbimpl) SetGroup(token string) (int, error) {
@@ -228,7 +220,7 @@ func (db *appdbimpl) AddToGroup(logins []string, conID int) error {
 	return nil
 }
 
-//rimuove un utente dal gruppo e cancella la conversazione se non ci sono più membri
+// rimuove un utente dal gruppo e cancella la conversazione se non ci sono più membri
 func (db *appdbimpl) LeaveGroup(token string, conID int) error {
 	_, err := db.c.Exec(`DELETE FROM UsersConversations WHERE login=(SELECT login FROM Users WHERE token=?) AND id_con=?`, token, conID)
 	if err != nil {
@@ -262,21 +254,15 @@ func (db *appdbimpl) SetGroupName(conID int, name string) error {
 	return err
 }
 
-//cambia la foto del gruppo
+// cambia la foto del gruppo
 func (db *appdbimpl) SetGroupPhoto(conID int, photo []byte) error {
 	_, err := db.c.Exec("UPDATE Conversations SET photo=? WHERE id_con=?", photo, conID)
 	return err
 }
 
-
-
-
-
-
-
 // --- Altre funzioni
 
-//inoltra un messaggio in un'altra conversazione
+// inoltra un messaggio in un'altra conversazione
 func (db *appdbimpl) ForwardMessage(token string, conID int, mesID int, forward int) error {
 	_, err := db.c.Exec(`INSERT INTO Messages (id_con, login, timestamp, text, photo, category)
 		SELECT ?, (SELECT login FROM Users WHERE token=?), CURRENT_TIMESTAMP, text, photo, category
@@ -364,7 +350,7 @@ func (db *appdbimpl) DeleteMessage(token string, mesID int, conID int) (int, err
 
 // aggiunge un commento a un messaggio
 func (db *appdbimpl) CommentMessage(mesID int, token string, emoji string) (int, error) {
-	
+
 	// rimozione commenti precedenti dell'utente sul messaggio
 	_, err := db.c.Exec(`DELETE FROM Comments WHERE id_msg=? AND login=(SELECT login FROM Users WHERE token=?)`, mesID, token)
 	if err != nil {

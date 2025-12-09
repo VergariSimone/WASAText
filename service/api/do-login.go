@@ -2,9 +2,9 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"regexp"
-	"github.com/julienschmidt/httprouter"
 )
 
 // STRUTTURE
@@ -52,4 +52,3 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, _ httprouter.
 		rt.baseLogger.WithError(err).Warning("Errore encoding JSON verso http.ResponseWriter")
 	}
 }
-

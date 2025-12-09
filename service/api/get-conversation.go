@@ -22,13 +22,13 @@ func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	// LETTURA PARAMETRO START 
+	// LETTURA PARAMETRO START
 	startInt, err := parseQueryInt(r, "start", 0)
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
-	
+
 	if startInt < 0 {
 		http.Error(w, "", http.StatusNotAcceptable)
 		return
@@ -40,7 +40,7 @@ func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps ht
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
-	
+
 	if limitInt < 50 || limitInt > 100 {
 		http.Error(w, "", http.StatusNotAcceptable)
 		return
@@ -52,20 +52,18 @@ func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	// RECUPEROP DA DB 
+	// RECUPEROP DA DB
 	convs, err := rt.db.GetConversation(convid, startInt, limitInt, token)
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
-	
 	resp, err := json.Marshal(convs)
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
-
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(resp); err != nil {

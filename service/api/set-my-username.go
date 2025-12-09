@@ -14,7 +14,7 @@ type Username struct {
 }
 
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	
+
 	// ESTRAZIONE TOKEN
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 

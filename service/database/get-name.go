@@ -1,4 +1,3 @@
-
 package database
 
 import (
@@ -25,7 +24,7 @@ type Cons struct {
 	ConId        int    `json:"conid"`
 	CategoryInfo string `json:"categoryinfo"`
 	Name         string `json:"name"`
-	Photo        string `json:"photo"`  // binhex
+	Photo        string `json:"photo"` // binhex
 	Sender       string `json:"sender"`
 	Toread       string `json:"toread"`
 	Mtimestamp   string `json:"mtimestamp"`
@@ -35,12 +34,12 @@ type Cons struct {
 }
 
 type Convers struct {
-	Conid        int     `json:"conid"`
-	Name         string  `json:"name"`
-	Photo        string  `json:"photo"`  // binhex
-	Users        []Us    `json:"user"`
-	CategoryInfo string  `json:"categoryinfo"`
-	Messages     []Mes   `json:"message"`
+	Conid        int    `json:"conid"`
+	Name         string `json:"name"`
+	Photo        string `json:"photo"` // binhex
+	Users        []Us   `json:"user"`
+	CategoryInfo string `json:"categoryinfo"`
+	Messages     []Mes  `json:"message"`
 }
 
 type ConInfo struct {
@@ -89,9 +88,7 @@ type Usrs struct {
 	CategoryInfo string `json:"categoryinfo"`
 }
 
-
 // FUNZIONI X DB
-
 
 // restituisce il login dell'utente dal token
 func (db *appdbimpl) GetName(token string) (string, error) {

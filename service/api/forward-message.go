@@ -58,7 +58,7 @@ func (rt *_router) forwardMessage(w http.ResponseWriter, r *http.Request, ps htt
 			return
 		}
 	} else {
-		// CREA O RECUPERA CONVERSAZIONE TRAMITE USERNAME 
+		// CREA O RECUPERA CONVERSAZIONE TRAMITE USERNAME
 		conidForw, err = rt.db.SetConversation(token, "conversation", target, "", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

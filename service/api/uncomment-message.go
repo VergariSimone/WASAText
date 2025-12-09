@@ -8,7 +8,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-
 func (rt *_router) uncommentMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// ESTRAZIONE DEL TOKEN DALL HEADER
@@ -33,6 +32,5 @@ func (rt *_router) uncommentMessage(w http.ResponseWriter, r *http.Request, ps h
 
 	// 204 OK
 	w.WriteHeader(http.StatusNoContent)
-
 
 }

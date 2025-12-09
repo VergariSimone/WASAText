@@ -11,7 +11,7 @@ import (
 
 func (rt *_router) setGroupName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-	// ESTRAZIONE TOKEN 
+	// ESTRAZIONE TOKEN
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
 	// PARSING CONV ID
@@ -21,10 +21,10 @@ func (rt *_router) setGroupName(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// RECUPERO NOME 
+	// RECUPERO NOME
 	name := r.URL.Query().Get("name")
 
-	// VALIDAZIONE DEL PATTERN 
+	// VALIDAZIONE DEL PATTERN
 	matches, err := regexp.MatchString(`.*`, name)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -48,7 +48,7 @@ func (rt *_router) setGroupName(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// VERIFICA AUTH UTENTE 
+	// VERIFICA AUTH UTENTE
 	if err := rt.db.IsAuthorized(token, convid); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return

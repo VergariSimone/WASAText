@@ -28,16 +28,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	
+
 	"WASAText/service/api"
 	"WASAText/service/database"
 	"WASAText/service/globaltime"
 
-
 	"github.com/ardanlabs/conf"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sirupsen/logrus"
-
 
 	"math/rand"
 	"net/http"

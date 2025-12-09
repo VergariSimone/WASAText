@@ -10,8 +10,7 @@ func (rt *_router) Handler() http.Handler {
 	// Registra routes
 
 	// lOGIN
-	rt.router.POST("/session",rt.doLogin)
-
+	rt.router.POST("/session", rt.doLogin)
 
 	// INFO PROFILO UTENTE
 	rt.router.GET("/info", rt.getUserInfo)
@@ -33,7 +32,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/conversations/byid/:convid/message/:mesid", rt.forwardMessage)
 	rt.router.DELETE("/conversations/byid/:convid/message/:mesid", rt.deleteMessage)
 
-	// COMMENTI 
+	// COMMENTI
 	rt.router.POST("/conversations/byid/:convid/message/:mesid/comment", rt.commentMessage)
 	rt.router.DELETE("/conversations/byid/:convid/message/:mesid/comment/:commid", rt.uncommentMessage)
 

@@ -17,7 +17,7 @@ type User struct {
 func (rt *_router) getUserInfo(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// ESTRAZIONE TOKEN 
+	// ESTRAZIONE TOKEN
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
 	// RECUPERO INFO UTENTE

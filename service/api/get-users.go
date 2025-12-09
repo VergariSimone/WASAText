@@ -9,7 +9,7 @@ import (
 )
 
 func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	
+
 	w.Header().Set("Content-Type", "application/json")
 
 	// ESTRAZIONE TOKEN
@@ -21,7 +21,6 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 
 	groups := false
 
-
 	if showgroups != "" && showgroups != "false" && showgroups != "true" {
 		// Il parametro ha un valore non accettabile → 406
 		http.Error(w, "", http.StatusNotAcceptable)
@@ -31,7 +30,7 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 		groups = true
 	}
 
-	// QUERY AL DB 
+	// QUERY AL DB
 	users, err := rt.db.GetUsers(token, fragment, groups)
 	if err != nil {
 		// Nessun risultato → 204 No Content
@@ -49,7 +48,6 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
-
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(resp); err != nil {

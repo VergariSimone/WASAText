@@ -12,7 +12,7 @@ import (
 )
 
 func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	
+
 	w.Header().Set("content-type", "application/json")
 
 	// ESTRAZIONE TOKEN
@@ -26,7 +26,6 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	
 	conID, msgID, err := rt.resolveConversationAndReply(token, conversationParam, replyParam)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -47,7 +46,7 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// INVIO MESS AL DB 
+	// INVIO MESS AL DB
 	if err := rt.db.SendMessage(conID, token, text, category, image, msgID); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -66,7 +65,7 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated) // 201 
+	w.WriteHeader(http.StatusCreated) // 201
 	if _, err := w.Write(data); err != nil {
 		rt.baseLogger.WithError(err).Warning("Errore durante la scrittura della risposta")
 	}
@@ -77,7 +76,7 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 // resolveConversationAndReply
 // RECUPERO/ CREAZIONE CONVERSAZIONE , VALIDAZIONE TOKEN E GESTIONE REPLY
 func (rt *_router) resolveConversationAndReply(token, conversationParam, replyParam string) (int, int, error) {
-	isNumeric := regexp.MustCompile(`^\d+$`) 
+	isNumeric := regexp.MustCompile(`^\d+$`)
 
 	var conID int
 	var err error
@@ -88,12 +87,12 @@ func (rt *_router) resolveConversationAndReply(token, conversationParam, replyPa
 		if err != nil {
 			return 0, -1, err
 		}
-		// AUTORIZZAZIONE 
+		// AUTORIZZAZIONE
 		if err := rt.db.IsAuthorized(token, conID); err != nil {
 			return 0, -1, err
 		}
 	} else {
-		// ALTRIMENTI È USERNAME -> IMPOSTA CONVERSAZIONE 
+		// ALTRIMENTI È USERNAME -> IMPOSTA CONVERSAZIONE
 		conID, err = rt.db.SetConversation(token, "conversation", conversationParam, "", nil)
 		if err != nil {
 			return 0, -1, err
@@ -115,7 +114,7 @@ func (rt *_router) resolveConversationAndReply(token, conversationParam, replyPa
 	return conID, msgID, nil
 }
 
-// parseMessagePayload 
+// parseMessagePayload
 // LEGGE DATI INVIATI DAL CLIENT
 func (rt *_router) parseMessagePayload(r *http.Request) (string, []byte, error) {
 	imgFile, _, err := r.FormFile("image")
@@ -134,7 +133,7 @@ func (rt *_router) parseMessagePayload(r *http.Request) (string, []byte, error) 
 	return text, image, nil
 }
 
-// validateMessageContent 
+// validateMessageContent
 // VALIDAZIONE TESTO E MESSAGGI , ASSEGNA CATEGORIA AL TIPO DI MESSAGGIOS
 func validateMessageContent(text string, image []byte) (string, error) {
 	hasText := len(text) > 0

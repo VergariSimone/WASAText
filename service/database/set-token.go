@@ -16,9 +16,7 @@ func (db *appdbimpl) SetToken(name string) (string, error) {
 
 	b := []byte(name)
 
-
 	token := md5.Sum(b)
-
 
 	stoken := hex.EncodeToString(token[:])
 
@@ -42,7 +40,6 @@ func (db *appdbimpl) SetToken(name string) (string, error) {
 	if err != nil {
 		return stoken, err
 	}
-
 
 	return stoken, nil
 }

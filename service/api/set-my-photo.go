@@ -14,8 +14,8 @@ type Userphoto struct {
 }
 
 func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	
-	// ESTRAZIONE TOKEN 
+
+	// ESTRAZIONE TOKEN
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
 	// CONTROLLO DEL CONTENT-TYPE
@@ -24,7 +24,7 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	// LETTURA FILE IMMAGINE 
+	// LETTURA FILE IMMAGINE
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

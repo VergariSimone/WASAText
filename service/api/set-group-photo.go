@@ -11,7 +11,7 @@ import (
 )
 
 func (rt *_router) setGroupPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// ESTRAZIONE TOKEN 
+	// ESTRAZIONE TOKEN
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
 	// PARSING CONV ID

@@ -190,8 +190,6 @@ func New(db *sql.DB) (AppDatabase, error) {
 	}, nil
 }
 
-
 func (db *appdbimpl) Ping() error {
 	return db.c.Ping()
 }
-
