@@ -2,391 +2,401 @@ package database
 
 import "fmt"
 
-// SetName is an example that shows you how to execute insert/update
+// --- Aggiornamento dati utente 
+
+// aggiorna lo username dell'utente e controlla che il nome non sia già utilizzato da altri utenti
 func (db *appdbimpl) SetMyUsername(name string, token string) error {
-	var n int
-	err := db.c.QueryRow(`SELECT COUNT(*) FROM Users WHERE token!=? AND username=?`, token, name).Scan(&n)
+	var count int
+	err := db.c.QueryRow(`SELECT COUNT(*) FROM Users WHERE token!=? AND username=?`, token, name).Scan(&count)
 	if err != nil {
 		return err
 	}
-
-	if n > 0 {
-		return fmt.Errorf("nome gia usato")
+	if count > 0 {
+		return fmt.Errorf("nome già in uso")
 	}
-
-	_, err = db.c.Exec("UPDATE Users set username=? WHERE token=?", name, token)
+	_, err = db.c.Exec("UPDATE Users SET username=? WHERE token=?", name, token)
 	return err
-
 }
 
+// aggiorna la foto dell'utente
 func (db *appdbimpl) SetMyUserphoto(photo []byte, token string) error {
-	_, err := db.c.Exec("UPDATE Users set userphoto=? WHERE token=?", photo, token)
+	_, err := db.c.Exec("UPDATE Users SET userphoto=? WHERE token=?", photo, token)
 	return err
 }
 
-func (db *appdbimpl) SetConversation(token string, category string, receiver string, convname string, photo []byte) (int, error) {
 
-	// Se esiste una conv fra i due ritorna quella
-	var lid int
-	var count int
-	err := db.c.QueryRow(`SELECT COUNT(*) from UsersConversations uc1,  UsersConversations uc2, Conversations c
-						  WHERE uc1.id_con=uc2.id_con AND c.id_con=uc1.id_con AND c.category='conversation'
-						  AND uc1.login!=uc2.login
-						  AND uc1.login=(SELECT login from Users WHERE token=?) 
-						  AND uc2.login=?`, token, receiver).Scan(&count)
+
+
+// --- Gestione conversazioni 
+
+// crea una nuova conversazione tra due utenti o ritorna quella esistente
+func (db *appdbimpl) SetConversation(token, category, receiver, convname string, photo []byte) (int, error) {
+	var convID, count int
+
+	// controlla se esiste già una conversazione tra i due utenti
+	err := db.c.QueryRow(`
+		SELECT COUNT(*) 
+		FROM UsersConversations uc1, UsersConversations uc2, Conversations c
+		WHERE uc1.id_con = uc2.id_con
+		  AND c.id_con = uc1.id_con
+		  AND c.category='conversation'
+		  AND uc1.login != uc2.login
+		  AND uc1.login=(SELECT login FROM Users WHERE token=?)
+		  AND uc2.login=?`, token, receiver).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
+
 	if count > 0 {
-		err := db.c.QueryRow(`SELECT uc1.id_con from UsersConversations uc1,  UsersConversations uc2, Conversations c
-						  WHERE uc1.id_con=uc2.id_con AND c.id_con=uc1.id_con AND c.category='conversation'
-						  AND uc1.login!=uc2.login
-						  AND uc1.login=(SELECT login from Users WHERE token=?) 
-						  AND uc2.login=?`, token, receiver).Scan(&lid)
+		// Se esiste, restituisce id 
+		err := db.c.QueryRow(`
+			SELECT uc1.id_con
+			FROM UsersConversations uc1, UsersConversations uc2, Conversations c
+			WHERE uc1.id_con = uc2.id_con
+			  AND c.id_con = uc1.id_con
+			  AND c.category='conversation'
+			  AND uc1.login != uc2.login
+			  AND uc1.login=(SELECT login FROM Users WHERE token=?)
+			  AND uc2.login=?`, token, receiver).Scan(&convID)
 		if err != nil {
 			return 0, err
 		}
-		return lid, err
+		return convID, nil
 	}
-	_, err = db.c.Exec(`INSERT INTO Conversations (id_con, category, name, photo) 
-						values(NULL, ?, ?, ?)`, category, convname, photo)
+
+	// else nuova conversazione
+	_, err = db.c.Exec(`INSERT INTO Conversations (id_con, category, name, photo) VALUES (NULL, ?, ?, ?)`, category, convname, photo)
 	if err != nil {
 		return 0, err
 	}
 
-	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&lid)
+	// prende id conv appena creata
+	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&convID)
 	if err != nil {
 		return 0, err
 	}
 
-	_, err = db.c.Exec(`INSERT INTO UsersConversations (login, id_con) 
-						values((SELECT login FROM Users WHERE token=?), ?)`, token, lid)
+	// inserisce i due utenti nella conv
+	_, err = db.c.Exec(`INSERT INTO UsersConversations (login, id_con) VALUES ((SELECT login FROM Users WHERE token=?), ?)`, token, convID)
+	if err != nil {
+		return 0, err
+	}
+	_, err = db.c.Exec(`INSERT INTO UsersConversations (login, id_con) VALUES (?, ?)`, receiver, convID)
 	if err != nil {
 		return 0, err
 	}
 
-	_, err = db.c.Exec(`INSERT INTO UsersConversations (login, id_con) 
-						values(?, ?)`, receiver, lid)
-	if err != nil {
-		return 0, err
-	}
-
-	return lid, err
+	return convID, nil
 }
 
-func (db *appdbimpl) SendMessage(conid int, token string, text string, category string, photo []byte, msid int) error {
+// invia un messaggio in una conversazione
+func (db *appdbimpl) SendMessage(conID int, token, text, category string, photo []byte, replyToID int) error {
+	
+	_, err := db.c.Exec(`INSERT INTO Messages VALUES(NULL, ?, (SELECT login FROM Users WHERE token=?), CURRENT_TIMESTAMP, ?, ?, ?)`,
+		conID, token, text, photo, category)
+	if err != nil {
+		return err
+	}
 
-	// if category == "text" {
-	_, err := db.c.Exec(`INSERT INTO Messages VALUES(NULL, ?, (SELECT login FROM Users WHERE token=?),
-	CURRENT_TIMESTAMP, ?, ?, ?)`, conid, token, text, photo, category)
+	
+	var msgID int
+	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&msgID)
 	if err != nil {
 		return err
 	}
-	// } else {
-	// 	_, err := db.c.Exec(`INSERT INTO Messages VALUES(NULL, ?, (SELECT login FROM Users WHERE token=?),
-	// 	CURRENT_TIMESTAMP, ?, ?)`, conid, token, photo, category)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
-	var lid int
-	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&lid)
+
+	rows, err := db.c.Query(`SELECT login FROM UsersConversations WHERE id_con=?`, conID)
 	if err != nil {
 		return err
 	}
-	rows, err := db.c.Query(`SELECT login FROM UsersConversations WHERE id_con=?`, conid)
-	if err != nil {
-		return err
-	}
-	var allm []string
+	var allUsers []string
 	for rows.Next() {
-		m := ""
-		if err := rows.Scan(&m); err != nil {
+		var login string
+		if err := rows.Scan(&login); err != nil {
 			return err
 		}
-		allm = append(allm, m)
+		allUsers = append(allUsers, login)
 	}
 	if err := rows.Err(); err != nil {
 		return err
 	}
-	for _, a := range allm {
-		_, cerr := db.c.Exec("INSERT INTO UsersMessages  VALUES(?, ?, 0, 0)", a, lid)
-		if cerr != nil {
-			return cerr
-		}
-	}
-	if msid > 0 {
-		_, err = db.c.Exec("INSERT INTO Replyed  VALUES(?, ?)", lid, msid)
+
+	// inserisce il messaggio nella tabella UsersMessages per ciascun utente
+	for _, login := range allUsers {
+		_, err := db.c.Exec("INSERT INTO UsersMessages VALUES(?, ?, 0, 0)", login, msgID)
 		if err != nil {
 			return err
 		}
 	}
-	return err
+
+	// se  messaggio è risposta altro messaggio, registra la relazione
+	if replyToID > 0 {
+		_, err = db.c.Exec("INSERT INTO Replyed VALUES(?, ?)", msgID, replyToID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
+
+
+
+// --- Gestione gruppi 
+
+// SetGroup crea un nuovo gruppo con messaggio iniziale
 func (db *appdbimpl) SetGroup(token string) (int, error) {
 	_, err := db.c.Exec(`INSERT INTO Conversations (id_con, category, name, photo) 
-						values(NULL, "group", concat("group created by ",(SELECT username FROM Users WHERE token=?)), NULL)`, token)
-	if err != nil {
-		return 0, err
-	}
-	var lid int
-	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&lid)
+		VALUES (NULL, "group", concat("group created by ", (SELECT username FROM Users WHERE token=?)), NULL)`, token)
 	if err != nil {
 		return 0, err
 	}
 
-	_, err = db.c.Exec(`INSERT INTO UsersConversations (login, id_con) 
-						values((SELECT login FROM Users WHERE token=?), ?)`, token, lid)
+	var groupID int
+	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&groupID)
+	if err != nil {
+		return 0, err
+	}
+
+	_, err = db.c.Exec(`INSERT INTO UsersConversations (login, id_con) VALUES ((SELECT login FROM Users WHERE token=?), ?)`, token, groupID)
 	if err != nil {
 		return 0, err
 	}
 
 	_, err = db.c.Exec(`INSERT INTO Messages (id_con, login, timestamp, text, photo, category)
-						values(?,(SELECT login FROM Users WHERE token=?), CURRENT_TIMESTAMP, 'group created', NULL, 'text')`, lid, token)
+		VALUES (?, (SELECT login FROM Users WHERE token=?), CURRENT_TIMESTAMP, 'group created', NULL, 'text')`, groupID, token)
 	if err != nil {
 		return 0, err
 	}
 
-	var lmsg int
-	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&lmsg)
+	var msgID int
+	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&msgID)
 	if err != nil {
 		return 0, err
 	}
 
-	_, err = db.c.Exec(`INSERT INTO UsersMessages 
-						values((SELECT login FROM Users WHERE token=?), ?, 0, 0)`, token, lmsg)
+	_, err = db.c.Exec(`INSERT INTO UsersMessages VALUES((SELECT login FROM Users WHERE token=?), ?, 0, 0)`, token, msgID)
 	if err != nil {
 		return 0, err
 	}
 
-	return lid, err
+	return groupID, nil
 }
 
-func (db *appdbimpl) AddToGroup(logins []string, conid int) error {
-	var err error
-	for _, c := range logins {
+// aggiunge utenti esistenti a un gruppo e marca come letti i messaggi precedenti
+func (db *appdbimpl) AddToGroup(logins []string, conID int) error {
+	for _, login := range logins {
 		var count int
-		err = db.c.QueryRow(`SELECT COUNT(*) from UsersConversations where login=? and id_con=?`, c, conid).Scan(&count)
+		err := db.c.QueryRow(`SELECT COUNT(*) FROM UsersConversations WHERE login=? AND id_con=?`, login, conID).Scan(&count)
 		if err != nil {
 			return err
 		}
 		if count > 0 {
 			continue
 		}
-		_, err = db.c.Exec(`INSERT INTO UsersConversations (login, id_con) 
-							values(?, ?)`, c, conid)
+
+		_, err = db.c.Exec(`INSERT INTO UsersConversations (login, id_con) VALUES (?, ?)`, login, conID)
 		if err != nil {
 			return err
-		}
-		var allmsg []int
-		rows, err := db.c.Query(`SELECT id_msg FROM Messages WHERE id_con=?`, conid)
-		if err != nil {
-			return err
-		}
-		for rows.Next() {
-			m := 0
-			if err := rows.Scan(&m); err != nil {
-				return err
-			}
-			allmsg = append(allmsg, m)
 		}
 
+		rows, err := db.c.Query(`SELECT id_msg FROM Messages WHERE id_con=?`, conID)
+		if err != nil {
+			return err
+		}
+		var msgIDs []int
+		for rows.Next() {
+			var msgID int
+			if err := rows.Scan(&msgID); err != nil {
+				return err
+			}
+			msgIDs = append(msgIDs, msgID)
+		}
 		if err := rows.Err(); err != nil {
 			return err
 		}
-		// Quando un nuovo utente viene aggiunto tutti i messaggi precedenti
-		// devono risultare come letti e ricevuti
-		for _, msg := range allmsg {
-			_, cerr := db.c.Exec(`INSERT INTO UsersMessages VALUES(?, ?, 1, 1)`, c, msg)
-			if cerr != nil {
-				return cerr
+
+		for _, msgID := range msgIDs {
+			_, err := db.c.Exec(`INSERT INTO UsersMessages VALUES(?, ?, 1, 1)`, login, msgID)
+			if err != nil {
+				return err
 			}
 		}
 	}
 	return nil
 }
 
-func (db *appdbimpl) LeaveGroup(token string, convid int) error {
-	_, err := db.c.Exec(`DELETE FROM UsersConversations 
-	WHERE login=(SELECT login FROM Users WHERE token=?) AND id_con=?`, token, convid)
+//rimuove un utente dal gruppo e cancella la conversazione se non ci sono più membri
+func (db *appdbimpl) LeaveGroup(token string, conID int) error {
+	_, err := db.c.Exec(`DELETE FROM UsersConversations WHERE login=(SELECT login FROM Users WHERE token=?) AND id_con=?`, token, conID)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.c.Exec(`DELETE FROM UsersMessages 
-	WHERE login=(SELECT login FROM Users WHERE token=?) AND 
-	id_msg IN (SELECT id_msg FROM Messages WHERE id_con=?)`, token, convid)
+	_, err = db.c.Exec(`DELETE FROM UsersMessages WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg IN (SELECT id_msg FROM Messages WHERE id_con=?)`, token, conID)
 	if err != nil {
 		return err
 	}
 
 	var count int
-	err = db.c.QueryRow(`SELECT COUNT(*) FROM UsersConversations WHERE id_con=?`, convid).Scan(&count)
+	err = db.c.QueryRow(`SELECT COUNT(*) FROM UsersConversations WHERE id_con=?`, conID).Scan(&count)
 	if err != nil {
 		return err
 	}
+
 	if count < 1 {
-		_, err := db.c.Exec(`DELETE FROM Conversations WHERE id_con=?`, convid)
+		_, err := db.c.Exec(`DELETE FROM Conversations WHERE id_con=?`, conID)
 		if err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+// cambia il nome del gruppo
+func (db *appdbimpl) SetGroupName(conID int, name string) error {
+	_, err := db.c.Exec("UPDATE Conversations SET name=? WHERE id_con=?", name, conID)
 	return err
 }
 
-func (db *appdbimpl) SetGroupName(convid int, name string) error {
-	_, err := db.c.Exec("UPDATE Conversations set name=? WHERE id_con=?", name, convid)
+//cambia la foto del gruppo
+func (db *appdbimpl) SetGroupPhoto(conID int, photo []byte) error {
+	_, err := db.c.Exec("UPDATE Conversations SET photo=? WHERE id_con=?", photo, conID)
 	return err
 }
 
-func (db *appdbimpl) SetGroupPhoto(convid int, photo []byte) error {
-	_, err := db.c.Exec("UPDATE Conversations set photo=? WHERE id_con=?", photo, convid)
-	return err
-}
 
-func (db *appdbimpl) ForwardMessage(token string, convid int, mesid int, forward int) error {
+
+
+
+
+
+// --- Altre funzioni
+
+//inoltra un messaggio in un'altra conversazione
+func (db *appdbimpl) ForwardMessage(token string, conID int, mesID int, forward int) error {
 	_, err := db.c.Exec(`INSERT INTO Messages (id_con, login, timestamp, text, photo, category)
 		SELECT ?, (SELECT login FROM Users WHERE token=?), CURRENT_TIMESTAMP, text, photo, category
-		FROM Messages WHERE id_msg=?`, forward, token, mesid)
+		FROM Messages WHERE id_msg=?`, forward, token, mesID)
 	if err != nil {
 		return err
 	}
 
-	var lid int
-	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&lid)
+	var newMsgID int
+	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&newMsgID)
 	if err != nil {
 		return err
 	}
 
 	_, err = db.c.Exec(`INSERT INTO UsersMessages(login, id_msg, received, read)
-		SELECT login, ?, 0, 0
-		FROM UsersConversations WHERE id_con=?`, lid, forward)
-
-	// rows, err := db.c.Query(`SELECT login FROM UsersConversations WHERE id_con=?`, forward)
+		SELECT login, ?, 0, 0 FROM UsersConversations WHERE id_con=?`, newMsgID, forward)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.c.Exec(`INSERT INTO Forwarded VALUES(?, ?)`, lid, forward)
+	_, err = db.c.Exec(`INSERT INTO Forwarded VALUES(?, ?)`, newMsgID, forward)
 	if err != nil {
 		return err
 	}
 
-	/*
-		for rows.Next() {
-			m := ""
-			if err := rows.Scan(&m); err != nil {
-				return err
-			}
-			_, cerr := db.c.Exec(`INSERT INTO UsersMessages VALUES(?, ?, 0, 0)`, m, lid)
-			if cerr != nil {
-				return cerr
-			}
-		}
-	*/
-	return err
-
+	return nil
 }
 
-func (db *appdbimpl) DeleteMessage(token string, mesid int, convid int) (int, error) {
-	var n int
-	var s int
-	err := db.c.QueryRow(`SELECT COUNT(*) FROM Messages 
-	WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg=?`, token, mesid).Scan(&n)
+// cancella un messaggio di un utente
+func (db *appdbimpl) DeleteMessage(token string, mesID int, conID int) (int, error) {
+	var userCount, totalCount int
+	err := db.c.QueryRow(`SELECT COUNT(*) FROM Messages WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg=?`, token, mesID).Scan(&userCount)
 	if err != nil {
 		return 0, err
 	}
-	err = db.c.QueryRow(`SELECT COUNT(*) FROM Messages 
-	WHERE id_msg=?`, mesid).Scan(&s)
-	if err != nil {
-		return 0, err
-	}
-	if s > n {
-		// n = numero di messaggi con mesid dell'utente, s = tutti mesid anche non dell'utente
-		// se s > n il mesid non è dell'utente e non lo può cancellare
-		return n - s, err
-	}
-
-	if n < 1 {
-		return 0, fmt.Errorf("message not found")
-	}
-
-	err = db.c.QueryRow(`SELECT COUNT(*) FROM Replyed
-	WHERE id_msg_old=?`, mesid).Scan(&s)
+	err = db.c.QueryRow(`SELECT COUNT(*) FROM Messages WHERE id_msg=?`, mesID).Scan(&totalCount)
 	if err != nil {
 		return 0, err
 	}
 
-	if s > 0 {
-		_, err = db.c.Exec(`UPDATE Messages set id_con=0 WHERE id_msg=?`, mesid)
+	if totalCount > userCount {
+		return userCount - totalCount, nil
+	}
+
+	if userCount < 1 {
+		return 0, fmt.Errorf("messaggio non trovato")
+	}
+
+	var replyCount int
+	err = db.c.QueryRow(`SELECT COUNT(*) FROM Replyed WHERE id_msg_old=?`, mesID).Scan(&replyCount)
+	if err != nil {
+		return 0, err
+	}
+
+	if replyCount > 0 {
+		_, err = db.c.Exec(`UPDATE Messages SET id_con=0 WHERE id_msg=?`, mesID)
 		if err != nil {
 			return 0, err
 		}
-		_, err = db.c.Exec(`DELETE FROM Messages WHERE id_con=0 AND 
-							id_msg not in (SELECT id_msg_old FROM Replyed)`)
+		_, err = db.c.Exec(`DELETE FROM Messages WHERE id_con=0 AND id_msg NOT IN (SELECT id_msg_old FROM Replyed)`)
 		if err != nil {
 			return 0, err
 		}
 	} else {
-		_, err = db.c.Exec(`DELETE FROM Messages WHERE id_msg=?`, mesid)
+		_, err = db.c.Exec(`DELETE FROM Messages WHERE id_msg=?`, mesID)
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	var m int
-	err = db.c.QueryRow(`SELECT COUNT(*) FROM Messages WHERE id_con=?`, convid).Scan(&m)
+	var remaining int
+	err = db.c.QueryRow(`SELECT COUNT(*) FROM Messages WHERE id_con=?`, conID).Scan(&remaining)
 	if err != nil {
 		return 0, err
 	}
-	if m < 1 {
-		_, err = db.c.Exec(`DELETE FROM Conversations WHERE id_con=?`, convid)
+	if remaining < 1 {
+		_, err = db.c.Exec(`DELETE FROM Conversations WHERE id_con=?`, conID)
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	return n, err
+	return userCount, nil
 }
 
-func (db *appdbimpl) CommentMessage(mesid int, token string, emoji string) (int, error) {
-
-	_, err := db.c.Exec(`DELETE FROM Comments WHERE id_msg=? and login = (select login from Users where token=?)`, mesid, token)
+// aggiunge un commento a un messaggio
+func (db *appdbimpl) CommentMessage(mesID int, token string, emoji string) (int, error) {
+	
+	// rimozione commenti precedenti dell'utente sul messaggio
+	_, err := db.c.Exec(`DELETE FROM Comments WHERE id_msg=? AND login=(SELECT login FROM Users WHERE token=?)`, mesID, token)
 	if err != nil {
 		return 0, err
 	}
 
-	_, err = db.c.Exec(`INSERT INTO Comments VALUES(NULL, ?, (SELECT login FROM Users WHERE token=?),?)`,
-		mesid, token, emoji)
+	_, err = db.c.Exec(`INSERT INTO Comments VALUES(NULL, ?, (SELECT login FROM Users WHERE token=?), ?)`, mesID, token, emoji)
 	if err != nil {
 		return 0, err
 	}
 
-	var lid int
-	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&lid)
+	var commID int
+	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&commID)
 	if err != nil {
 		return 0, err
 	}
 
-	return lid, err
+	return commID, nil
 }
 
-func (db *appdbimpl) UncommentMessage(token string, mesid int) (int, error) {
-	var n int
-	err := db.c.QueryRow(`SELECT COUNT(*) FROM Comments 
-	WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg=?`, token, mesid).Scan(&n)
+// rimuove un commento fatto dall'utente su un messaggio
+func (db *appdbimpl) UncommentMessage(token string, mesID int) (int, error) {
+	var count int
+	err := db.c.QueryRow(`SELECT COUNT(*) FROM Comments WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg=?`, token, mesID).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
-	// if n < 1 {
-	// 	return 0, fmt.Errorf("comment not found")
-	// }
-	_, err = db.c.Exec(`DELETE FROM Comments WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg=?`, token, mesid)
+
+	_, err = db.c.Exec(`DELETE FROM Comments WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg=?`, token, mesID)
 	if err != nil {
 		return 0, err
 	}
-	return n, err
+
+	return count, nil
 }
