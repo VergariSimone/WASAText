@@ -1,3 +1,33 @@
+/*
+Package database is the middleware between the app database and the code. All data (de)serialization (save/load) from a
+persistent database are handled here. Database specific logic should never escape this package.
+
+To use this package you need to apply migrations to the database if needed/wanted, connect to it (using the database
+data source name from config), and then initialize an instance of AppDatabase from the DB connection.
+
+For example, this code adds a parameter in `webapi` executable for the database data source name (add it to the
+main.WebAPIConfiguration structure):
+
+	DB struct {
+		Filename string `conf:""`
+	}
+
+This is an example on how to migrate the DB and connect to it:
+
+	// Start Database
+	logger.Println("initializing database support")
+	db, err := sql.Open("sqlite3", "./foo.db")
+	if err != nil {
+		logger.WithError(err).Error("error opening SQLite DB")
+		return fmt.Errorf("opening SQLite: %w", err)
+	}
+	defer func() {
+		logger.Debug("database stopping")
+		_ = db.Close()
+	}()
+
+Then you can initialize the AppDatabase and pass it to the api package.
+*/
 package database
 
 import (
@@ -6,30 +36,31 @@ import (
 	"fmt"
 )
 
-// INTERFACCIA PRINCIPALE PER TUTTE LE CRUD DEL DATABASE
+// INTERFACCIA PRINCIPALE PER TUTTE LE CRUD DEL DB 
 type AppDatabase interface {
 	GetName(token string) (string, error)
-	GetToken(name string) (string, error)
-	SetToken(name string) (string, error)
+	GetUsers(token string, search string, groups bool) ([]Usrs, error)
 	SetMyUsername(name string, token string) error
+	SetMyUserphoto(photo []byte, token string) error
+	SetToken(name string) (string, error)
+	GetToken(token string) (string, error)
 	GetUserInfo(token string) (string, []byte, error)
-	GetUsers(token string, search string, groups bool) ([]User, error)
-	GetMyConversations(token string) ([]ConversationShort, error)
-	SetConversation(token string, category, receiver, convname string, photo []byte) (int, error)
-	SendMessage(conid int, token, text, category string, photo []byte, replyID int) error
+	GetMyConversations(token string) ([]Cons, error)
+	SetConversation(token string, category string, receiver string, convname string, photo []byte) (int, error)
+	SendMessage(conid int, token string, text string, category string, photo []byte, msid int) error
 	IsAuthorized(token string, conid int) error
-	IsMsgAuthorized(token string, mesid int) error
+	IsMsgAuthorized(token string, msid int) error
 	IsAGroup(token string, conid int) error
-	GetConversation(conid, start, limit int, token string) (Conversation, error)
-	GetGroupInfo(conid int) (ConversationInfo, error)
+	GetConversation(conid int, start int, limit int, token string) (Convers, error)
+	GetGroupInfo(conid int) (ConInfo, error)
 	SetGroup(token string) (int, error)
 	AddToGroup(logins []string, conid int) error
 	LeaveGroup(token string, convid int) error
 	SetGroupName(convid int, name string) error
 	SetGroupPhoto(convid int, photo []byte) error
-	ForwardMessage(token string, convid, mesid, forwardID int) error
-	DeleteMessage(token string, mesid, convid int) (int, error)
-	CommentMessage(mesid int, token, emoji string) (int, error)
+	ForwardMessage(token string, convid int, mesid int, forward int) error
+	DeleteMessage(token string, mesid int, convid int) (int, error)
+	CommentMessage(mesid int, token string, emoji string) (int, error)
 	UncommentMessage(token string, mesid int) (int, error)
 	Ping() error
 }
@@ -38,20 +69,21 @@ type appdbimpl struct {
 	c *sql.DB
 }
 
-// NUOVA ISTANZA APPDATABASE
+// NUOVA ISTANZA APP DATABASE
 func New(db *sql.DB) (AppDatabase, error) {
 	if db == nil {
 		return nil, errors.New("è necessario il databse quando si crea un AppDatabase")
 	}
 
-	_, err := db.Exec(`PRAGMA foreign_keys = ON;`)
-	if err != nil {
-		return nil, fmt.Errorf("errore durante l'abilitazione delle chiavi esterne: %w", err)
+	sqlStmt := `PRAGMA foreign_keys = ON`
+	_, ferr := db.Exec(sqlStmt)
+	if ferr != nil {
+		return nil, fmt.Errorf("errore durante l'abilitazione delle chiavi esterne: %w", ferr)
 	}
 
-	// CONTROLLO SE LA TABELLA ESISTE, ALTRIMENTI LA CREO
+	// CONTROLLO SE LA TABELLA ESISTE ALTTRIENTI LA CREO
 	var tableName string
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Comments';`).Scan(&tableName)
+	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Comments';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
 		sqlStmt := `CREATE TABLE IF NOT EXISTS "Comments" (
 						"id_com"	INTEGER NOT NULL,
@@ -80,13 +112,13 @@ func New(db *sql.DB) (AppDatabase, error) {
 					);`
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database %w", err)
+			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
 		}
 
 		sqlStmt = `INSERT INTO Conversations VALUES(0,'conversation', '', NULL)`
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database %w", err)
+			return nil, fmt.Errorf("ERRORE %w", err)
 		}
 	}
 
