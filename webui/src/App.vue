@@ -19,6 +19,6 @@
 	
 	<style>
 	.personal-bg{
-		background-color: white;
+		background-color: #38BDF8;
 	}
 	</style>
