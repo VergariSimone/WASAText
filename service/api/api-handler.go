@@ -4,7 +4,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strings"
-
 )
 
 // // Handler restituisce un'istanza di httprouter.Router che gestisce le API registrate qui
@@ -17,7 +16,7 @@ func (rt *_router) Handler() http.Handler {
 
 	// INFO PROFILO UTENTE
 	rt.router.GET("/info", rt.authControl(rt.getUserInfo))
-	rt.router.GET("/users",rt.authControl(rt.getUsers))
+	rt.router.GET("/users", rt.authControl(rt.getUsers))
 	rt.router.PUT("/info/username", rt.authControl(rt.setMyUserName))
 	rt.router.PUT("/info/userphoto", rt.authControl(rt.setMyPhoto))
 
@@ -31,7 +30,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/conversations/byid/:convid", rt.authControl(rt.leaveGroup))
 	rt.router.PUT("/conversations/byid/:convid/name", rt.authControl(rt.setGroupName))
 	rt.router.PUT("/conversations/byid/:convid/photo", rt.authControl(rt.setGroupPhoto))
-	rt.router.GET("/conversations/byid/:convid/info",rt.authControl(rt.getGroupInfo))
+	rt.router.GET("/conversations/byid/:convid/info", rt.authControl(rt.getGroupInfo))
 
 	// INTERRAZIONE MESSAGGI SPECIFICI
 	rt.router.POST("/conversations/byid/:convid/message/:mesid", rt.authControl(rt.forwardMessage))
@@ -49,7 +48,7 @@ func (rt *_router) Handler() http.Handler {
 
 func (rt *_router) authControl(next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		
+
 		token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if token == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -68,4 +67,3 @@ func (rt *_router) authControl(next httprouter.Handle) httprouter.Handle {
 		next(w, r, ps)
 	}
 }
-

@@ -3,11 +3,11 @@
 package main
 
 import (
+	"WASAText/webui"
 	"fmt"
 	"io/fs"
 	"net/http"
 	"strings"
-	"WASAText/webui"
 )
 
 func registerWebUI(hdl http.Handler) (http.Handler, error) {

@@ -36,7 +36,7 @@ import (
 	"fmt"
 )
 
-// INTERFACCIA PRINCIPALE PER TUTTE LE CRUD DEL DB 
+// INTERFACCIA PRINCIPALE PER TUTTE LE CRUD DEL DB
 type AppDatabase interface {
 	GetName(token string) (string, error)
 	GetUsers(token string, search string, groups bool) ([]Usrs, error)

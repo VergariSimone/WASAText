@@ -1,9 +1,9 @@
 package database
 
 import (
+	b64 "encoding/base64"
 	"encoding/hex"
 	"fmt"
-	b64 "encoding/base64"
 )
 
 // STRUTTURE PER MESS, CONV, UTENTI
@@ -192,7 +192,6 @@ func (db *appdbimpl) GetUserInfo(token string) (string, []byte, error) {
 	return username, photo, err
 }
 
-
 // restitusce le conversazioni dell'utente
 func (db *appdbimpl) GetMyConversations(token string) ([]Cons, error) {
 	conShort := []Cons{}
@@ -236,7 +235,6 @@ func (db *appdbimpl) GetMyConversations(token string) ([]Cons, error) {
 	var allmsg []int
 	var p []byte
 	var q []byte
-
 
 	for rows.Next() {
 		conv := Cons{}
@@ -282,8 +280,7 @@ func (db *appdbimpl) IsAuthorized(token string, conid int) error {
 	return fmt.Errorf("conversazione non autorizzata")
 }
 
-
-//  l’utente non acceda a messaggi che non gli appartengono
+// l’utente non acceda a messaggi che non gli appartengono
 func (db *appdbimpl) IsMsgAuthorized(token string, msid int) error {
 	var name string
 	err := db.c.QueryRow(`SELECT login FROM UsersMessages 
@@ -306,7 +303,6 @@ func (db *appdbimpl) IsAGroup(token string, conid int) error {
 	}
 	return fmt.Errorf("non è un gruppo")
 }
-
 
 // restituisce info conversazione + messaggi (paginati) e li segna come letti/ricevuti
 func (db *appdbimpl) GetConversation(conid int, start int, limit int, token string) (Convers, error) {
@@ -335,8 +331,6 @@ func (db *appdbimpl) GetConversation(conid int, start int, limit int, token stri
 	if err != nil {
 		return con, err
 	}
-
-
 
 	for rows.Next() {
 		m := Mes{}
@@ -369,7 +363,6 @@ func (db *appdbimpl) GetConversation(conid int, start int, limit int, token stri
 		if cerr != nil {
 			return con, cerr
 		}
-
 
 		for crows.Next() {
 			rcv := Received{}
