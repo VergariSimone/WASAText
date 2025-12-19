@@ -35,3 +35,11 @@ node_modules/
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# eseguibile webapi
+webapi
+webapi.exe
+
+# file db 
+*.db
+*.sqlite
