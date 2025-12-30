@@ -43,8 +43,4 @@ services:
 # frontend: http://localhost:8080
 # backend : http://localhost:3000
 
-
-
-
-
 # per stoppare programma e ripulire i container  : docker-compose down
