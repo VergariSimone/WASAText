@@ -32,7 +32,7 @@
           };
   
           const searchAgain = () => {
-              // Accesso diretto al DOM per il valore di ricerca
+              
               const val = document.getElementById('list-search-input').value;
               emit('search-again', val);
           };
@@ -40,15 +40,15 @@
           const userChoose = (login) => {
               if (!props.showOk) return;
   
-              // Manipolazione diretta del DOM per la selezione visiva
+              
               var element = document.getElementById('uc' + login);
               
               if (!selected.value.includes(login)) {
                   selected.value.push(login);
-                  // Aggiunta classe manuale
+                  
                   if(element) element.classList.add("user-card-selected");
               } else {
-                  // Rimozione classe manuale
+                  
                   if(element) element.classList.remove("user-card-selected");
                   const index = selected.value.indexOf(login);
                   if (index > -1) {

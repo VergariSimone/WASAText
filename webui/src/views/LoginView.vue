@@ -4,7 +4,6 @@
   
   export default {
       name: "LoginForm",
-      // Template non più necessario come stringa esterna, uso il template del SFC
       setup() {
           const { proxy } = getCurrentInstance();
           const $axios = proxy.$axios;
