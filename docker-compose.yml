@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # back GO
+  backend:
+    # creazione immagine con file Dockerfile.backend
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    
+    # nome del conteiner
+    container_name: app-backend
+    
+    # assegna porta 
+    ports:
+      - "3000:3000"
+    
+    # se il contaier si interrompe prova a riavviarlo
+    restart: unless-stopped
+
+  # front
+  frontend:
+    # creazione immagine con file Dockerfile.frontend 
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    
+    container_name: app-frontend
+    
+    
+    #  assegna porta : http://localhost:8080
+    ports:
+      - "8080:80"
+    
+    # viene avviato prima il back
+    depends_on:
+      - backend
+
+
+
+# per avviare programma : docker-compose up --build
+
+# frontend: http://localhost:8080
+# backend : http://localhost:3000
+
+
+
+
+
+# per stoppare programma e ripulire i container  : docker-compose down
