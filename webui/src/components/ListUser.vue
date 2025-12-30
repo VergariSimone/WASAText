@@ -118,7 +118,7 @@
               v-if="u && u.login === '0'"
               class="user-card empty"
             >
-              <img class="avatar" src="/void.gif" />
+              <img class="avatar" src="/profile.svg" />
               <div class="details">
                 <span class="name muted">
                   Search produced no results

@@ -1,7 +1,7 @@
 <template id="login-view">
   <div class="login-wrapper">
     <div class="login-left">
-      <img src="/home/wasa/Desktop/WASAText/webui/public/wasatext_logo.png" alt="Logo WASA TEXT" />
+      <img src="/wasatext_logo.png" alt="Logo WASA TEXT" />
     </div>
 
     <form class="login-right" @submit.prevent>
@@ -14,6 +14,7 @@
           v-model="username"
         />
       </div>
+
 
       <div class="button-area">
         <button @click="login">
