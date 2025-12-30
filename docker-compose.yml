@@ -7,6 +7,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      
+    volumes:
+      # Mappa il file locale (sinistra) nel file interno (destra)
+      - ./prova.sqlite:/app/prova.sqlite
     
     # nome del conteiner
     container_name: app-backend

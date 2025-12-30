@@ -85,7 +85,7 @@ func run() error {
 
 	// Start Database
 	logger.Println("initializing database support")
-	dbconn, err := sql.Open("sqlite3", cfg.DB.Filename)
+	dbconn, err := sql.Open("sqlite3", "prova.sqlite")
 	if err != nil {
 		logger.WithError(err).Error("error opening SQLite DB")
 		return fmt.Errorf("opening SQLite: %w", err)
