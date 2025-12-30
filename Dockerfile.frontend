@@ -1,0 +1,23 @@
+
+# immagine Node "LTS" è la più stabile
+# chiamata "builder" 
+FROM node:lts as builder
+
+# cartella di lavoro dentro il container temporaneo
+WORKDIR /app
+
+# copia la cartella locale 'webui' dentro al container
+COPY webui .
+
+# scarica tutte le librerie nel package.json (node_modules)
+RUN yarn install
+
+# "compila" il progetto Vue.
+RUN yarn run build-prod
+
+# usa Nginx
+FROM nginx:stable
+
+# prende solo la cartella 'dist' (il risultato della compilazione) 
+# la copia nella cartella dove Nginx si aspetta di trovare i file del sito (/usr/share/nginx/html)
+COPY --from=builder /app/dist /usr/share/nginx/html
