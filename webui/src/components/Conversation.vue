@@ -31,47 +31,43 @@
         ],
         data() {
             return {
-                // --- STATI MODALI ---
                 showEmojiModal: false,
-                showNewChatModal: false, // Per nuova chat singola
-                showGroupModal: false,   // Per nuovi gruppi
-    
-                // --- STATI DATI ---
-                targetUserNewChat: null, // Utente selezionato per nuova chat
-                selectedUsersList: [],   // Lista utenti caricata dall'API per le modali
-                
-                // --- STATI MESSAGGIO ---
-                selectedMessage: null,   // Messaggio su cui si sta agendo (es. click destro)
-                replyToMessage: null,    // Messaggio a cui si sta rispondendo
-                
+                showNewChatModal: false,
+                showGroupModal: false,
+                targetUserNewChat: null,
+                selectedUsersList: [],
+                selectedMessage: null,
+                replyToMessage: null,
                 errormsg: null,
-    
-                // --- MENU CONTESTUALE ---
                 optionsmessage: [
                     {name: 'Reagisci', slug: 'comment'},
                     {name: 'Rispondi', slug: 'reply'},
-                    {name: 'Inoltra', slug: 'forward'}, // (Logica base)
+                    {name: 'Inoltra', slug: 'forward'},
                     {type: 'divider'},
                     {name: 'Elimina', slug: 'delete'},
                 ],
             }
         },
-    
+        computed: {
+            // --- ORDINE INVERSO: VECCHI SOPRA, NUOVI SOTTO ---
+            sortedMessages() {
+                if (!this.selectedconvs || !this.selectedconvs.message) return [];
+                // Crea una copia dell'array e lo inverte
+                return [...this.selectedconvs.message].reverse();
+            }
+        },
         mounted() {
             this.refresh();
             this.scrollToBottom();
         },
-    
         watch: {
-            // Scrolla in basso quando arrivano nuovi messaggi
+            // Quando cambiano i messaggi, scendi in basso (per vedere i nuovi)
             'selectedconvs.message': {
                 handler() { this.scrollToBottom(); },
                 deep: true
             }
         },
-    
         methods: {
-            // ================= UTILITIES =================
             refresh() { this.$emit('refresh'); },
             logout() { this.$emit('logout'); },
             info() { this.$emit('show-user-info'); },
@@ -89,37 +85,23 @@
                 return new Date(ts + 'Z').toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
             },
     
-            // ================= GESTIONE NUOVA CHAT =================
+            // --- GESTIONE NUOVA CHAT ---
             async startNewChat() {
                 this.showNewChatModal = true;
                 this.targetUserNewChat = null;
                 this.selectedUsersList = [];
-                
                 try {
-                    let res = await this.$axios.get(`/users?search=`, { 
-                        headers: { Authorization: "Bearer " + this.token } 
-                    });
-                    // Normalizza in array
+                    let res = await this.$axios.get(`/users?search=`, { headers: { Authorization: "Bearer " + this.token } });
                     this.selectedUsersList = Array.isArray(res.data) ? res.data : [res.data];
-                } catch (e) {
-                    this.errormsg = "Errore caricamento utenti";
-                }
+                } catch (e) { this.errormsg = "Errore caricamento utenti"; }
             },
     
             onUserSelectedForChat(users) {
-                // ListUser restituisce un array. Prendiamo il primo elemento.
                 let user = Array.isArray(users) ? users[0] : users;
-                
                 if (!user) return;
-                if (user === this.login) { 
-                    this.errormsg = "Non puoi scriverti da solo"; 
-                    return; 
-                }
-    
-                this.targetUserNewChat = user; // Salviamo la stringa "mario"
-                this.showNewChatModal = false; // Chiudiamo la modale
-                
-                // Focus automatico input (opzionale, richiede accesso al ref figlio)
+                if (user === this.login) { this.errormsg = "Non puoi scriverti da solo"; return; }
+                this.targetUserNewChat = user;
+                this.showNewChatModal = false;
             },
     
             cancelNewChat() {
@@ -127,13 +109,11 @@
                 this.targetUserNewChat = null;
             },
     
-            // ================= GESTIONE GRUPPI =================
+            // --- GESTIONE GRUPPI ---
             async startNewGroup() {
                 this.showGroupModal = true;
                 try {
-                    let res = await this.$axios.get(`/users?search=`, { 
-                        headers: { Authorization: "Bearer " + this.token } 
-                    });
+                    let res = await this.$axios.get(`/users?search=`, { headers: { Authorization: "Bearer " + this.token } });
                     this.selectedUsersList = Array.isArray(res.data) ? res.data : [res.data];
                 } catch (e) {}
             },
@@ -142,72 +122,46 @@
                 this.showGroupModal = false;
                 var out = [];
                 for (var key in users) out.push('users=' + encodeURIComponent(users[key]));
-                
                 try {
-                    let res = await this.$axios.put(`/conversations/group?${out.join('&')}`, {}, { 
-                        headers: { Authorization: "Bearer " + this.token } 
-                    });
+                    let res = await this.$axios.put(`/conversations/group?${out.join('&')}`, {}, { headers: { Authorization: "Bearer " + this.token } });
                     this.$emit('change-selected-conv-byid', res.data);
                 } catch (e) { this.errormsg = e.toString(); }
             },
     
-            // ================= GESTIONE INVIO MESSAGGI =================
+            // --- INVIO MESSAGGI ---
             async handleSend(text, image) {
                 this.errormsg = null;
-                
-                // CASO 1: Nuova Chat (Utente selezionato ma conversazione non ancora esistente)
-                if (this.targetUserNewChat) {
-                    await this.sendToNewUser(text, image);
-                } 
-                // CASO 2: Chat Esistente
-                else if (this.selectedconvs) {
-                    await this.sendToExistingChat(text, image);
-                } else {
-                    this.errormsg = "Errore: Nessuna chat attiva.";
-                }
+                if (this.targetUserNewChat) await this.sendToNewUser(text, image);
+                else if (this.selectedconvs) await this.sendToExistingChat(text, image);
+                else this.errormsg = "Errore: Nessuna chat attiva.";
             },
     
             async sendToNewUser(text, image) {
                 let formData = new FormData();
                 if (text) formData.append('text', text);
                 if (image) formData.append('image', image, 'image');
-    
                 try {
-                    // API call verso l'utente target
-                    let res = await this.$axios.post(`/conversations?conversation=${this.targetUserNewChat}`, formData, {
-                        headers: { Authorization: "Bearer " + this.token }
-                    });
-                    
-                    // Successo: Resettiamo lo stato "Nuova Chat"
+                    let res = await this.$axios.post(`/conversations?conversation=${this.targetUserNewChat}`, formData, { headers: { Authorization: "Bearer " + this.token } });
                     this.targetUserNewChat = null;
-                    // Emettiamo la nuova conversazione arrivata dal server
                     this.$emit('change-selected-conv', res.data);
                     this.refresh();
-                } catch (e) {
-                    this.errormsg = "Errore invio: " + e.toString();
-                }
+                } catch (e) { this.errormsg = "Errore invio: " + e.toString(); }
             },
     
             async sendToExistingChat(text, image) {
                 let formData = new FormData();
                 if (text) formData.append('text', text);
                 if (image) formData.append('image', image, 'image');
-    
                 let url = `/conversations?conversation=${this.selectedconvs.conid}`;
                 if (this.replyToMessage) url += `&reply=${this.replyToMessage.mesid}`;
-    
                 try {
-                    let res = await this.$axios.post(url, formData, {
-                        headers: { Authorization: "Bearer " + this.token }
-                    });
+                    let res = await this.$axios.post(url, formData, { headers: { Authorization: "Bearer " + this.token } });
                     this.$emit('change-selected-conv', res.data);
-                    this.replyToMessage = null; // Chiudi reply bar
-                } catch (e) {
-                    this.errormsg = "Errore invio: " + e.toString();
-                }
+                    this.replyToMessage = null;
+                } catch (e) { this.errormsg = "Errore invio: " + e.toString(); }
             },
     
-            // ================= GESTIONE MENU & AZIONI =================
+            // --- MENU & AZIONI ---
             showContextMenu(e, msg) {
                 this.selectedMessage = msg;
                 this.$refs.vueMessageMenu.showMenu(e, msg);
@@ -216,66 +170,44 @@
             onMenuOption(event) {
                 const { slug } = event.option;
                 const msg = event.item;
-    
                 if (slug === 'comment') {
-                    this.selectedMessage = msg; // Salviamo il msg per la modale emoji
+                    this.selectedMessage = msg;
                     this.showEmojiModal = true;
                 } else if (slug === 'reply') {
                     this.replyToMessage = msg;
-                    // Scroll up o focus input opzionale
                 } else if (slug === 'delete') {
                     this.deleteMsg(msg);
-                } else if (slug === 'forward') {
-                    // Semplificazione: mostra alert o logica complessa
-                    alert("Funzionalità Inoltra da implementare nella modale utenti");
                 }
             },
     
             async sendReaction(emojiData) {
-                // setComment emette l'emoji. selectedMessage è salvato nello stato.
                 if (!this.selectedMessage) return;
                 this.showEmojiModal = false;
-                
                 try {
-                    await this.$axios.post(
-                        `/conversations/byid/${this.selectedMessage.conid}/message/${this.selectedMessage.mesid}/comment`, 
-                        emojiData.i, // emojiData.i contiene il carattere emoji
-                        { headers: { Authorization: "Bearer " + this.token, 'content-type': 'text/plain' } }
-                    );
+                    await this.$axios.post(`/conversations/byid/${this.selectedMessage.conid}/message/${this.selectedMessage.mesid}/comment`, emojiData.i, { headers: { Authorization: "Bearer " + this.token, 'content-type': 'text/plain' } });
                     this.refresh();
                 } catch (e) { this.errormsg = e.toString(); }
             },
     
             async deleteMsg(msg) {
                  try {
-                    await this.$axios.delete(`/conversations/byid/${msg.conid}/message/${msg.mesid}`, {
-                         headers: { Authorization: "Bearer " + this.token }
-                    });
+                    await this.$axios.delete(`/conversations/byid/${msg.conid}/message/${msg.mesid}`, { headers: { Authorization: "Bearer " + this.token } });
                     this.refresh();
-                } catch(e) { 
-                    if(e.response && e.response.status === 403) this.errormsg = "Non puoi eliminare messaggi altrui";
-                    else this.errormsg = "Errore eliminazione"; 
-                }
+                } catch(e) { this.errormsg = (e.response && e.response.status === 403) ? "Non puoi eliminare messaggi altrui" : "Errore eliminazione"; }
             },
     
-            // ================= UI HELPERS =================
-            getClass(msg) {
-                return msg.login === this.login ? 'msg-me' : 'msg-friend';
-            },
+            // --- UI HELPERS ---
+            getClass(msg) { return msg.login === this.login ? 'msg-me' : 'msg-friend'; },
             
             getCheckStatus(msg) {
                 if (msg.login !== this.login) return null;
-                // 1. Letto (Blu/Verde)
                 let read = msg.readarray && msg.readarray.some(u => u.name !== this.login && u.read === 'true');
-                if (read) return 'read'; 
-                // 2. Ricevuto (Doppio Grigio)
+                if (read) return 'read';
                 let rcv = msg.receivedarray && msg.receivedarray.some(u => u.name !== this.login && u.received === 'true');
-                if (rcv) return 'received'; 
-                // 3. Inviato (Singolo)
-                return 'sent'; 
+                if (rcv) return 'received';
+                return 'sent';
             },
     
-            // Gestione popup emoji esistenti (chi ha reagito)
             toggleEmojiPopup(commId) {
                 let el = document.getElementById('co' + commId);
                 if(el) el.style.visibility = (el.style.visibility == 'visible') ? 'hidden' : 'visible';
@@ -294,17 +226,14 @@
                         <h5 v-else-if="selectedconvs" class="m-0">{{ selectedconvs.name }}</h5>
                         <h5 v-else class="m-0">&nbsp;</h5>
                     </div>
-    
                     <div class="header-actions">
                         <button class="btn btn-icon" @click="refresh" title="Refresh">↻</button>
                         <button class="btn btn-icon" @click="info" title="Info Utente">ℹ️</button>
-                        
                         <button v-if="targetUserNewChat" class="btn btn-danger btn-sm ms-2" @click="cancelNewChat">Annulla</button>
                         <div v-else class="d-inline-block ms-2">
                             <button class="btn btn-outline-light btn-sm me-1" @click="startNewGroup">Gruppo</button>
                             <button class="btn btn-primary btn-sm" @click="startNewChat">Nuova Chat</button>
                         </div>
-                        
                         <button class="btn btn-outline-info btn-sm ms-2" @click="logout">Esci</button>
                     </div>
                 </div>
@@ -315,15 +244,14 @@
                 
                 <div v-if="!targetUserNewChat && selectedconvs">
                     
-                    <div v-if="sv && sv.start != 0" class="load-more" @click="$emit('list-previous')">
-                        ▲ Carica precedenti
+                    <div v-if="sv && sv.limit == selectedconvs.message.length" class="load-more" @click="$emit('list-next')">
+                        ▲ Carica messaggi precedenti
                     </div>
                     
-                    <div v-for="msg in selectedconvs.message" :key="msg.mesid" 
+                    <div v-for="msg in sortedMessages" :key="msg.mesid" 
                          class="msg-row" :class="getClass(msg)">
                         
                         <div class="bubble" @contextmenu.prevent="showContextMenu($event, msg)">
-                            
                             <div v-if="msg.login !== login" class="sender-name">{{ msg.username }}</div>
                             <div v-if="msg.isforwarded > 0" class="forwarded-tag">↩ Inoltrato</div>
     
@@ -353,8 +281,8 @@
                         </div>
                     </div>
     
-                    <div v-if="sv && sv.limit == selectedconvs.message.length" class="load-more" @click="$emit('list-next')">
-                        ▼ Carica successivi
+                    <div v-if="sv && sv.start != 0" class="load-more" @click="$emit('list-previous')">
+                        ▼ Torna ai messaggi recenti
                     </div>
                 </div>
     
@@ -388,23 +316,13 @@
     
             <div v-if="showNewChatModal" class="modal-overlay">
                 <div class="modal-box">
-                    <listuser 
-                        :users="selectedUsersList" 
-                        :showOk="false" 
-                        @send-users-list="onUserSelectedForChat" 
-                        @search-cancel="showNewChatModal = false"
-                    />
+                    <listuser :users="selectedUsersList" :showOk="false" @send-users-list="onUserSelectedForChat" @search-cancel="showNewChatModal = false"/>
                 </div>
             </div>
     
             <div v-if="showGroupModal" class="modal-overlay">
                 <div class="modal-box">
-                    <listuser 
-                        :users="selectedUsersList" 
-                        :showOk="true" 
-                        @send-users-list="createGroup" 
-                        @search-cancel="showGroupModal = false"
-                    />
+                    <listuser :users="selectedUsersList" :showOk="true" @send-users-list="createGroup" @search-cancel="showGroupModal = false"/>
                 </div>
             </div>
     
@@ -419,7 +337,6 @@
             </div>
     
             <vue-simple-context-menu element-id="menu-message" :options="optionsmessage" ref="vueMessageMenu" @option-clicked="onMenuOption" />
-    
         </div>
     </template>
     
@@ -428,7 +345,7 @@
     .chat-wrapper {
         display: flex;
         flex-direction: column;
-        height: 100vh; /* O 100dvh se supportato */
+        height: 100vh;
         background-color: #0f172a;
         color: #f1f5f9;
         overflow: hidden;
@@ -444,7 +361,7 @@
     
     .chat-body {
         flex-grow: 1;
-        overflow-y: auto; /* Scroll principale */
+        overflow-y: auto;
         padding: 15px;
         display: flex;
         flex-direction: column;
@@ -511,7 +428,7 @@
     }
     .reply-author { font-weight: bold; color: #5eead4; }
     
-    /* Reply Bar (Footer) */
+    /* Reply Bar */
     .reply-bar {
         background: #0f172a; padding: 6px 10px; border-radius: 6px;
         margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
