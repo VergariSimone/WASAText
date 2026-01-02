@@ -209,17 +209,32 @@
             async sendReaction(emojiChar) {
                 if (!this.selectedMessage) return;
                 
-                // Chiudi la modale
+                // 1. Chiudi la modale
                 this.showEmojiModal = false;
 
-                try {
-                    // 1. Prendi l'ID conversazione (dal messaggio o da quella selezionata)
-                    const conid = this.selectedMessage.conid || this.selectedconvs.conid;
+                // 2. AGGIORNAMENTO VISIVO IMMEDIATO (Optimistic UI)
+                // Creiamo un oggetto "finto" per far apparire subito l'emoji
+                const fakeReaction = {
+                    commId: Date.now(), // Id temporaneo
+                    emoji: emojiChar,
+                    username: this.login
+                };
 
-                    // 2. Chiamata API (inviamo l'emoji direttamente come testo)
+                // Se il messaggio non ha ancora commenti/reazioni, crea l'array
+                if (!this.selectedMessage.comments) {
+                    this.selectedMessage.comments = [];
+                }
+                
+                // Aggiungi la reazione alla lista locale
+                this.selectedMessage.comments.push(fakeReaction);
+
+                // 3. Chiamata API al server (in background)
+                try {
+                    const conid = this.selectedMessage.conid || this.selectedconvs.conid;
+                    
                     await this.$axios.post(
                         `/conversations/byid/${conid}/message/${this.selectedMessage.mesid}/comment`, 
-                        emojiChar, // <-- Inviamo direttamente il carattere
+                        emojiChar, 
                         { 
                             headers: { 
                                 Authorization: "Bearer " + this.token, 
@@ -228,12 +243,13 @@
                         }
                     );
 
-                    // 3. Ricarica per vedere la reazione
-                    this.refresh();
+                    // 4. (Opzionale) Ricarica per confermare i dati reali
+                    // this.refresh(); 
 
                 } catch (e) { 
                     console.error(e);
-                    this.errormsg = "Errore invio reazione"; 
+                    this.errormsg = "Errore invio reazione";
+                    // Se fallisce, dovremmo rimuovere l'emoji finta, ma per ora va bene così
                 }
             },
     
@@ -346,11 +362,17 @@
                                 </span>
                             </div>
     
-                            <div v-if="msg.comments" class="reactions-badge" @click.stop="toggleEmojiPopup(msg.comments[0].commId)">
-                                {{ msg.comments[0].emoji }}
-                                <div :id="'co' + msg.comments[0].commId" class="reactions-popup">
-                                    <div v-for="c in msg.comments" :key="c.commId">{{ c.emoji }} {{ c.username }}</div>
-                                </div>
+                            <div v-if="msg.comments && msg.comments.length > 0" 
+                                    class="reactions-badge" 
+                                    @click.stop="toggleEmojiPopup(msg.comments[0].commId)">
+                                    
+                                    {{ msg.comments[msg.comments.length - 1].emoji }}
+                                    
+                                    <div :id="'co' + msg.comments[0].commId" class="reactions-popup">
+                                        <div v-for="c in msg.comments" :key="c.commId">
+                                            {{ c.emoji }} {{ c.username }}
+                                        </div>
+                                    </div>
                             </div>
                         </div>
                     </div>
@@ -476,6 +498,7 @@
         border-radius: 12px;
         position: relative;
         box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        overflow: visible;  
     }
     
     .msg-me .bubble { background-color: #059669; border-bottom-right-radius: 2px; }
@@ -499,10 +522,17 @@
     
     /* Reazioni */
     .reactions-badge {
-        position: absolute; bottom: -12px; right: -5px;
-        background: #1e293b; border: 2px solid #0f172a; border-radius: 12px;
-        padding: 2px 6px; font-size: 13px; cursor: pointer; z-index: 5;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        position: absolute;
+        bottom: -10px; /* Spingi un po' più in basso */
+        right: -5px;
+        background: #1e293b;
+        border: 2px solid #0f172a;
+        border-radius: 12px;
+        padding: 2px 6px;
+        font-size: 1.1rem; /* Un po' più grande */
+        cursor: pointer;
+        z-index: 10; /* Deve essere sopra a tutto */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     .reactions-popup {
         position: absolute; bottom: 25px; right: 0; background: #334155;
