@@ -1,83 +1,51 @@
 package api
 
-/*parameters:
-	- $ref: "#/components/parameters/ConversationID"
-	- $ref: "#/components/parameters/MessageID"
-  requestBody:
-	description: reaction emoji
-	required: true
-	content:
-	  image/gif:
-		schema:
-		  description: emoji
-		  type: string
-		  format: binary
-		  minLength: 64
-		  maxLength: 524288
-  responses:
-	"200":
-	  description: message commented
-	  content:
-		application/json:
-		  schema:
-			$ref: "#/components/schemas/ComID"
-	"401":
-	  $ref: "#/components/responses/UnauthorizedError"
-	"404":
-	  description: message id or conversation id not found
-*/
-
 import (
-	"io"
+	"encoding/json" 
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
+	
 )
 
+type CommentRequest struct {
+	Emoji string `json:"text"`
+}
+
 func (rt *_router) commentMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
+
+	// 1. Parse ID Messaggio
+	mesID, err := strconv.Atoi(ps.ByName("mesid"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// 2. Parse Token
 	token := strings.ReplaceAll(r.Header.Get("Authorization"), "Bearer ", "")
 
-	convid, err := strconv.Atoi(ps.ByName("convid"))
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	mesid, err := strconv.Atoi(ps.ByName("mesid"))
-	if err != nil {
+	// 3. Parse Body (JSON)
+	var req CommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	responseData, err := io.ReadAll(r.Body)
+	// 4. Chiama il DB
+	id, err := rt.db.CommentMessage(mesID, token, req.Emoji)
 	if err != nil {
+		// Se l'errore è SQL (es. utente non trovato), diamo 400
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// fmt.Println(len(responseData), len(string(responseData)))
-	if (len(responseData) > 4) || (len(responseData) < 1) {
-		w.WriteHeader(http.StatusNotAcceptable)
-		return
-	}
-
-	emoji := string(responseData)
-
-	err = rt.db.IsAuthorized(token, convid)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-
-	_, err = rt.db.CommentMessage(mesid, token, emoji)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	
+	// 5. Rispondi OK
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"id":    id,
+		"emoji": req.Emoji,
+	})
 }

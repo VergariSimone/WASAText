@@ -254,25 +254,56 @@
                 if (!this.selectedMessage) return;
                 this.showEmojiModal = false;
 
-                const fakeReaction = {
-                    commId: Date.now(), 
-                    emoji: emojiChar,
-                    username: this.login
-                };
+                // 1. CERCHIAMO SE HO GIÀ MESSO QUESTA REAZIONE
+                // Cerchiamo nei commenti del messaggio se c'è un commento MIO con la STESSA emoji
+                const existingReaction = this.selectedMessage.comments 
+                    ? this.selectedMessage.comments.find(c => c.username === this.login && c.emoji === emojiChar)
+                    : null;
 
-                if (!this.selectedMessage.comments) this.selectedMessage.comments = [];
-                this.selectedMessage.comments.push(fakeReaction);
+                const conid = this.selectedMessage.conid || this.selectedconvs.conid;
+                const mesid = this.selectedMessage.mesid;
 
                 try {
-                    const conid = this.selectedMessage.conid || this.selectedconvs.conid;
-                    await this.$axios.post(
-                        `/conversations/byid/${conid}/message/${this.selectedMessage.mesid}/comment`, 
-                        { text: emojiChar }, // Assumendo che il backend ora accetti JSON
-                        { headers: { Authorization: "Bearer " + this.token } }
-                    );
+                    if (existingReaction) {
+                        // === CASO DELETE: LA REAZIONE ESISTE GIÀ, LA RIMUOVO ===
+                        
+                        // Aggiornamento Ottimistico (Rimuovo visivamente subito)
+                        const idx = this.selectedMessage.comments.indexOf(existingReaction);
+                        if (idx > -1) this.selectedMessage.comments.splice(idx, 1);
+
+                        // Chiamata API DELETE
+                        // Nota: Serve l'ID del commento (commId) che abbiamo trovato
+                        await this.$axios.delete(
+                            `/conversations/byid/${conid}/message/${mesid}/comment/${existingReaction.commId}`, 
+                            { headers: { Authorization: "Bearer " + this.token } }
+                        );
+
+                    } else {
+                        // === CASO POST: LA REAZIONE NON C'È, LA AGGIUNGO ===
+                        
+                        // Aggiornamento Ottimistico
+                        const fakeReaction = {
+                            commId: Date.now(),
+                            emoji: emojiChar,
+                            username: this.login
+                        };
+                        if (!this.selectedMessage.comments) this.selectedMessage.comments = [];
+                        this.selectedMessage.comments.push(fakeReaction);
+
+                        // Chiamata API POST
+                        await this.$axios.post(
+                            `/conversations/byid/${conid}/message/${mesid}/comment`, 
+                            { text: emojiChar }, 
+                            { headers: { Authorization: "Bearer " + this.token } }
+                        );
+                    }
+                    
+                    
+
                 } catch (e) { 
-                    console.error(e);
-                    this.errormsg = "Errore invio reazione";
+                    console.error("Errore reazione:", e);
+                    this.errormsg = "Errore gestione reazione";
+                    
                 }
             },
     

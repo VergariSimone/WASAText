@@ -374,38 +374,65 @@ func (db *appdbimpl) DeleteMessage(token string, mesID int, conID int) (int, err
 // aggiunge un commento a un messaggio
 func (db *appdbimpl) CommentMessage(mesID int, token string, emoji string) (int, error) {
 
-	// rimozione commenti precedenti dell'utente sul messaggio
-	_, err := db.c.Exec(`DELETE FROM Comments WHERE id_msg=? AND login=(SELECT login FROM Users WHERE token=?)`, mesID, token)
-	if err != nil {
-		return 0, err
-	}
+    // 1. RECUPERA PRIMA IL LOGIN (Più sicuro)
+    // Così se il token è sbagliato, ci fermiamo subito con un errore chiaro
+    var userLogin string
+    err := db.c.QueryRow(`SELECT login FROM "Users" WHERE token = ?`, token).Scan(&userLogin)
+    if err != nil {
+        return 0, err // Ritorna errore se utente non trovato
+    }
 
-	_, err = db.c.Exec(`INSERT INTO Comments VALUES(NULL, ?, (SELECT login FROM Users WHERE token=?), ?)`, mesID, token, emoji)
-	if err != nil {
-		return 0, err
-	}
+    // 2. RIMUOVI COMMENTI PRECEDENTI
+    // Usiamo le virgolette "Comments" per sicurezza
+    _, err = db.c.Exec(`DELETE FROM "Comments" WHERE id_msg=? AND login=?`, mesID, userLogin)
+    if err != nil {
+        return 0, err
+    }
 
-	var commID int
-	err = db.c.QueryRow(`SELECT last_insert_rowid()`).Scan(&commID)
-	if err != nil {
-		return 0, err
-	}
+    // 3. INSERISCI IL NUOVO COMMENTO
+    // Specifichiamo le colonne (id_msg, login, emoji) lasciando fare a SQLite l'ID automatico
+    res, err := db.c.Exec(`INSERT INTO "Comments" (id_msg, login, emoji) VALUES (?, ?, ?)`, 
+        mesID, userLogin, emoji)
+    if err != nil {
+        return 0, err
+    }
 
-	return commID, nil
+    // 4. RECUPERA L'ID CREATO
+    lastID, err := res.LastInsertId()
+    if err != nil {
+        return 0, err
+    }
+
+    return int(lastID), nil
 }
 
 // rimuove un commento fatto dall'utente su un messaggio
-func (db *appdbimpl) UncommentMessage(token string, mesID int) (int, error) {
-	var count int
-	err := db.c.QueryRow(`SELECT COUNT(*) FROM Comments WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg=?`, token, mesID).Scan(&count)
-	if err != nil {
-		return 0, err
-	}
+// 1 = Cancellato con successo
+// 0 = Nessun commento trovato da cancellare (o token non valido)
+func (db *appdbimpl) UncommentMessage(token string, mesid int) (int, error) {
+    
+    // Eseguiamo la DELETE cercando la riga che corrisponde a quel messaggio 
+    // E a quell'utente (tramite subquery sul token)
+    res, err := db.c.Exec(`
+        DELETE FROM "Comments" 
+        WHERE id_msg = ? 
+        AND login = (SELECT login FROM "Users" WHERE token = ?)`, 
+        mesid, token)
+    
+    if err != nil {
+        return 0, err
+    }
 
-	_, err = db.c.Exec(`DELETE FROM Comments WHERE login=(SELECT login FROM Users WHERE token=?) AND id_msg=?`, token, mesID)
-	if err != nil {
-		return 0, err
-	}
+    rowsAffected, err := res.RowsAffected()
+    if err != nil {
+        return 0, err
+    }
 
-	return count, nil
+    // Se abbiamo cancellato almeno una riga, ritorniamo 1 (Successo)
+    if rowsAffected > 0 {
+        return 1, nil
+    }
+
+    // Se non abbiamo cancellato nulla (l'utente non aveva reagito o token errato), ritorniamo 0
+    return 0, nil
 }
