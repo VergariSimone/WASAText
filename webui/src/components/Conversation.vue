@@ -215,10 +215,36 @@
             },
     
             async deleteMsg(msg) {
-                 try {
-                    await this.$axios.delete(`/conversations/byid/${msg.conid}/message/${msg.mesid}`, { headers: { Authorization: "Bearer " + this.token } });
-                    this.refresh();
-                } catch(e) { this.errormsg = (e.response && e.response.status === 403) ? "Non puoi eliminare messaggi altrui" : "Errore eliminazione"; }
+                try {
+                    // 1. Usa l'ID della conversazione selezionata se non c'è nel messaggio
+                    const conversationID = msg.conid || this.selectedconvs.conid;
+        
+                    console.log(`Tentativo eliminazione: ConvID=${conversationID}, MsgID=${msg.mesid}`);
+
+                    // 2. Chiamata API corretta
+                    await this.$axios.delete(`/conversations/byid/${conversationID}/message/${msg.mesid}`, { 
+                        headers: { Authorization: "Bearer " + this.token } 
+                    });
+
+                    // 3. AGGIORNAMENTO VISIVO IMMEDIATO (Trucco per farlo sparire subito)
+                    // Rimuoviamo il messaggio dalla lista locale senza aspettare il refresh del server
+                    if (this.selectedconvs && this.selectedconvs.message) {
+                        const index = this.selectedconvs.message.findIndex(m => m.mesid === msg.mesid);
+                        if (index !== -1) {
+                            this.selectedconvs.message.splice(index, 1);
+                        }
+                    }
+        
+                    // 4. (Opzionale) Ricarica dal server per sicurezza
+                    // this.refresh(); 
+
+                } catch(e) { 
+                    console.error("Errore API Delete:", e);
+                    this.errormsg = (e.response && e.response.status === 403) 
+                        ? "Non puoi eliminare messaggi altrui" 
+                        : "Errore durante l'eliminazione"; 
+                }
+            
             },
     
             // --- UI HELPERS ---
