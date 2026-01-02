@@ -164,6 +164,31 @@
             // --- MENU & AZIONI ---
             showContextMenu(e, msg) {
                 this.selectedMessage = msg;
+                
+                // Controlla se il messaggio è mio
+                const isMyMessage = (msg.login === this.login);
+
+                if (isMyMessage) {
+                    // OPZIONI PER I MIEI MESSAGGI
+                    // Posso: Reagire, Rispondere, Inoltrare, ELIMINARE
+                    this.optionsmessage = [
+                        { name: 'Reagisci', slug: 'comment' },
+                        { name: 'Rispondi', slug: 'reply' },
+                        { name: 'Inoltra', slug: 'forward' },
+                        { type: 'divider' },
+                        { name: 'Elimina', slug: 'delete' } // Questa appare solo per me
+                    ];
+                } else {
+                    // OPZIONI PER I MESSAGGI ALTRUI
+                    // Posso: Reagire, Rispondere, Inoltrare (Non posso eliminare)
+                    this.optionsmessage = [
+                        { name: 'Reagisci', slug: 'comment' },
+                        { name: 'Rispondi', slug: 'reply' },
+                        { name: 'Inoltra', slug: 'forward' }
+                    ];
+                }
+
+                // Apre il menu
                 this.$refs.vueMessageMenu.showMenu(e, msg);
             },
     
@@ -339,6 +364,14 @@
         </div>
     </template>
     
+    <style>
+        .vue-simple-context-menu {
+                position: fixed !important; /* Si ancora alla finestra, non al div */
+                z-index: 10000 !important;  /* Assicura che sia sopra a tutto */
+                max-height: 100vh;
+                overflow-y: auto;
+        }
+    </style>
     <style scoped>
     /* ================= LAYOUT ================= */
     .chat-wrapper {
