@@ -31,6 +31,7 @@
         ],
         data() {
             return {
+                availableEmojis: ['👍', '❤️', '😂', '😮', '😢', '😡', '👏', '🔥', '🎉'],
                 showEmojiModal: false,
                 showNewChatModal: false,
                 showGroupModal: false,
@@ -205,13 +206,35 @@
                 }
             },
     
-            async sendReaction(emojiData) {
+            async sendReaction(emojiChar) {
                 if (!this.selectedMessage) return;
+                
+                // Chiudi la modale
                 this.showEmojiModal = false;
+
                 try {
-                    await this.$axios.post(`/conversations/byid/${this.selectedMessage.conid}/message/${this.selectedMessage.mesid}/comment`, emojiData.i, { headers: { Authorization: "Bearer " + this.token, 'content-type': 'text/plain' } });
+                    // 1. Prendi l'ID conversazione (dal messaggio o da quella selezionata)
+                    const conid = this.selectedMessage.conid || this.selectedconvs.conid;
+
+                    // 2. Chiamata API (inviamo l'emoji direttamente come testo)
+                    await this.$axios.post(
+                        `/conversations/byid/${conid}/message/${this.selectedMessage.mesid}/comment`, 
+                        emojiChar, // <-- Inviamo direttamente il carattere
+                        { 
+                            headers: { 
+                                Authorization: "Bearer " + this.token, 
+                                'Content-Type': 'text/plain' 
+                            } 
+                        }
+                    );
+
+                    // 3. Ricarica per vedere la reazione
                     this.refresh();
-                } catch (e) { this.errormsg = e.toString(); }
+
+                } catch (e) { 
+                    console.error(e);
+                    this.errormsg = "Errore invio reazione"; 
+                }
             },
     
             async deleteMsg(msg) {
@@ -377,11 +400,20 @@
                 </div>
             </div>
     
-            <div v-if="showEmojiModal" class="modal-overlay">
+            <div v-if="showEmojiModal" class="modal-overlay" @click.self="showEmojiModal = false">
                 <div class="modal-box small-box">
-                    <div class="d-flex justify-content-between mb-2">
-                        <h6 class="m-0 text-light">Reagisci</h6>
+                    <div class="d-flex justify-content-between mb-3">
+                        <h6 class="m-0 text-light">Scegli reazione</h6>
                         <button class="btn-close-custom" @click="showEmojiModal = false">✕</button>
+                    </div>
+        
+                    <div class="emoji-grid">
+                        <span v-for="emoji in availableEmojis" 
+                            :key="emoji" 
+                             class="emoji-item" 
+                            @click="sendReaction(emoji)">
+                            {{ emoji }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -516,4 +548,25 @@
     .empty-state { margin: auto; color: #64748b; font-size: 1.1rem; }
     .btn-icon { background: none; border: 1px solid #475569; color: #fff; border-radius: 4px; cursor: pointer; margin-right: 5px; }
     .btn-close-custom { background: none; border: none; color: white; cursor: pointer; }
+
+    .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 per riga */
+    gap: 15px;
+    padding: 10px;
+    }
+
+    .emoji-item {
+        font-size: 2rem;
+        cursor: pointer;
+        text-align: center;
+        transition: transform 0.2s;
+        padding: 5px;
+        border-radius: 50%;
+    }
+
+    .emoji-item:hover {
+        transform: scale(1.3);
+        background-color: rgba(255, 255, 255, 0.1);
+    }
     </style>
