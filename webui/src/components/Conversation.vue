@@ -15,19 +15,11 @@
             'ErrorMsg': ErrorMsg
         },
         props: [
-            "selectedconvs",
-            "sv", // Scroll/Pagination info
-            "login",
-            "token",
+            "selectedconvs", "sv", "login", "token",
         ],
         emits: [
-            'list-next',
-            'list-previous',
-            'change-selected-conv',
-            'change-selected-conv-byid',
-            'show-user-info',
-            'refresh',
-            'logout',
+            'list-next', 'list-previous', 'change-selected-conv',
+            'change-selected-conv-byid', 'show-user-info', 'refresh', 'logout',
         ],
         data() {
             return {
@@ -35,6 +27,12 @@
                 showEmojiModal: false,
                 showNewChatModal: false,
                 showGroupModal: false,
+                
+                // --- NUOVO: Variabili per Inoltro ---
+                showForwardModal: false,
+                messageToForward: null,
+                // ------------------------------------
+
                 targetUserNewChat: null,
                 selectedUsersList: [],
                 selectedMessage: null,
@@ -50,10 +48,8 @@
             }
         },
         computed: {
-            // --- ORDINE INVERSO: VECCHI SOPRA, NUOVI SOTTO ---
             sortedMessages() {
                 if (!this.selectedconvs || !this.selectedconvs.message) return [];
-                // Crea una copia dell'array e lo inverte
                 return [...this.selectedconvs.message].reverse();
             }
         },
@@ -62,7 +58,6 @@
             this.scrollToBottom();
         },
         watch: {
-            // Quando cambiano i messaggi, scendi in basso (per vedere i nuovi)
             'selectedconvs.message': {
                 handler() { this.scrollToBottom(); },
                 deep: true
@@ -128,6 +123,57 @@
                     this.$emit('change-selected-conv-byid', res.data);
                 } catch (e) { this.errormsg = e.toString(); }
             },
+
+            // --- NUOVO: GESTIONE INOLTRO ---
+            async startForwardingSearch() {
+                this.selectedUsersList = [];
+                try {
+                    // Carica lista utenti per l'inoltro
+                    let res = await this.$axios.get(`/users?search=`, { headers: { Authorization: "Bearer " + this.token } });
+                    this.selectedUsersList = Array.isArray(res.data) ? res.data : [res.data];
+                } catch (e) { this.errormsg = "Errore caricamento utenti"; }
+            },
+
+            async executeForward(users) {
+                this.showForwardModal = false;
+                // Prendi il primo utente selezionato
+                let targetUser = Array.isArray(users) ? users[0] : users;
+                
+                if (!targetUser || !this.messageToForward) return;
+
+                let formData = new FormData();
+                
+                // Copia il testo se esiste
+                if (this.messageToForward.text) {
+                    formData.append('text', this.messageToForward.text);
+                }
+                
+                // Aggiungi flag inoltro (opzionale, se il backend lo supporta)
+                formData.append('isforwarded', '1');
+
+                // NOTA: Inoltrare le immagini Base64 richiede logica backend specifica o conversione Blob.
+                // Qui stiamo inoltrando principalmente il testo.
+
+                try {
+                    // Invia alla chat del destinatario
+                    await this.$axios.post(
+                        `/conversations?conversation=${targetUser}`, 
+                        formData, 
+                        { headers: { Authorization: "Bearer " + this.token } }
+                    );
+
+                    alert("Messaggio inoltrato a " + targetUser);
+                    
+                    // Pulizia
+                    this.messageToForward = null;
+                    // Opzionale: se vuoi spostarti nella chat dove hai inoltrato, potresti fare un refresh o cambio chat
+                    // this.refresh();
+
+                } catch (e) {
+                    this.errormsg = "Errore durante l'inoltro: " + e.toString();
+                }
+            },
+            // -------------------------------
     
             // --- INVIO MESSAGGI ---
             async handleSend(text, image) {
@@ -165,37 +211,30 @@
             // --- MENU & AZIONI ---
             showContextMenu(e, msg) {
                 this.selectedMessage = msg;
-                
-                // Controlla se il messaggio è mio
                 const isMyMessage = (msg.login === this.login);
 
                 if (isMyMessage) {
-                    // OPZIONI PER I MIEI MESSAGGI
-                    // Posso: Reagire, Rispondere, Inoltrare, ELIMINARE
                     this.optionsmessage = [
                         { name: 'Reagisci', slug: 'comment' },
                         { name: 'Rispondi', slug: 'reply' },
                         { name: 'Inoltra', slug: 'forward' },
                         { type: 'divider' },
-                        { name: 'Elimina', slug: 'delete' } // Questa appare solo per me
+                        { name: 'Elimina', slug: 'delete' }
                     ];
                 } else {
-                    // OPZIONI PER I MESSAGGI ALTRUI
-                    // Posso: Reagire, Rispondere, Inoltrare (Non posso eliminare)
                     this.optionsmessage = [
                         { name: 'Reagisci', slug: 'comment' },
                         { name: 'Rispondi', slug: 'reply' },
                         { name: 'Inoltra', slug: 'forward' }
                     ];
                 }
-
-                // Apre il menu
                 this.$refs.vueMessageMenu.showMenu(e, msg);
             },
     
             onMenuOption(event) {
                 const { slug } = event.option;
                 const msg = event.item;
+
                 if (slug === 'comment') {
                     this.selectedMessage = msg;
                     this.showEmojiModal = true;
@@ -203,90 +242,57 @@
                     this.replyToMessage = msg;
                 } else if (slug === 'delete') {
                     this.deleteMsg(msg);
+                } else if (slug === 'forward') {
+                    // --- NUOVO: GESTIONE CLICK MENU INOLTRA ---
+                    this.messageToForward = msg;
+                    this.showForwardModal = true;
+                    this.startForwardingSearch();
                 }
             },
     
             async sendReaction(emojiChar) {
                 if (!this.selectedMessage) return;
-                
-                // 1. Chiudi la modale
                 this.showEmojiModal = false;
 
-                // 2. AGGIORNAMENTO VISIVO IMMEDIATO (Optimistic UI)
-                // Creiamo un oggetto "finto" per far apparire subito l'emoji
                 const fakeReaction = {
-                    commId: Date.now(), // Id temporaneo
+                    commId: Date.now(), 
                     emoji: emojiChar,
                     username: this.login
                 };
 
-                // Se il messaggio non ha ancora commenti/reazioni, crea l'array
-                if (!this.selectedMessage.comments) {
-                    this.selectedMessage.comments = [];
-                }
-                
-                // Aggiungi la reazione alla lista locale
+                if (!this.selectedMessage.comments) this.selectedMessage.comments = [];
                 this.selectedMessage.comments.push(fakeReaction);
 
-                // 3. Chiamata API al server (in background)
                 try {
                     const conid = this.selectedMessage.conid || this.selectedconvs.conid;
-                    
                     await this.$axios.post(
                         `/conversations/byid/${conid}/message/${this.selectedMessage.mesid}/comment`, 
-                        emojiChar, 
-                        { 
-                            headers: { 
-                                Authorization: "Bearer " + this.token, 
-                                'Content-Type': 'text/plain' 
-                            } 
-                        }
+                        { text: emojiChar }, // Assumendo che il backend ora accetti JSON
+                        { headers: { Authorization: "Bearer " + this.token } }
                     );
-
-                    // 4. (Opzionale) Ricarica per confermare i dati reali
-                    // this.refresh(); 
-
                 } catch (e) { 
                     console.error(e);
                     this.errormsg = "Errore invio reazione";
-                    // Se fallisce, dovremmo rimuovere l'emoji finta, ma per ora va bene così
                 }
             },
     
             async deleteMsg(msg) {
                 try {
-                    // 1. Usa l'ID della conversazione selezionata se non c'è nel messaggio
                     const conversationID = msg.conid || this.selectedconvs.conid;
-        
-                    console.log(`Tentativo eliminazione: ConvID=${conversationID}, MsgID=${msg.mesid}`);
-
-                    // 2. Chiamata API corretta
                     await this.$axios.delete(`/conversations/byid/${conversationID}/message/${msg.mesid}`, { 
                         headers: { Authorization: "Bearer " + this.token } 
                     });
-
-                    // 3. AGGIORNAMENTO VISIVO IMMEDIATO (Trucco per farlo sparire subito)
-                    // Rimuoviamo il messaggio dalla lista locale senza aspettare il refresh del server
                     if (this.selectedconvs && this.selectedconvs.message) {
                         const index = this.selectedconvs.message.findIndex(m => m.mesid === msg.mesid);
-                        if (index !== -1) {
-                            this.selectedconvs.message.splice(index, 1);
-                        }
+                        if (index !== -1) this.selectedconvs.message.splice(index, 1);
                     }
-        
-                    // 4. (Opzionale) Ricarica dal server per sicurezza
-                    // this.refresh(); 
-
                 } catch(e) { 
-                    console.error("Errore API Delete:", e);
                     this.errormsg = (e.response && e.response.status === 403) 
                         ? "Non puoi eliminare messaggi altrui" 
                         : "Errore durante l'eliminazione"; 
                 }
-            
             },
     
-            // --- UI HELPERS ---
             getClass(msg) { return msg.login === this.login ? 'msg-me' : 'msg-friend'; },
             
             getCheckStatus(msg) {
@@ -304,7 +310,7 @@
             }
         }
     }
-    </script>
+</script>
     
     <template>
         <div class="chat-wrapper">
@@ -437,6 +443,20 @@
                             {{ emoji }}
                         </span>
                     </div>
+                </div>
+            </div>
+            <div v-if="showForwardModal" class="modal-overlay">
+                <div class="modal-box">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="text-light">Inoltra a...</h5>
+                        <button class="btn-close-custom" @click="showForwardModal = false">✕</button>
+                    </div>
+                    <listuser 
+                        :users="selectedUsersList" 
+                        :showOk="false" 
+                        @send-users-list="executeForward" 
+                        @search-cancel="showForwardModal = false"
+                    />
                 </div>
             </div>
     
