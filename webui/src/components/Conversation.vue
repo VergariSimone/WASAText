@@ -332,7 +332,6 @@
                         <h6 class="m-0 text-light">Reagisci</h6>
                         <button class="btn-close-custom" @click="showEmojiModal = false">✕</button>
                     </div>
-                    <setcomment @send-comment="sendReaction" />
                 </div>
             </div>
     

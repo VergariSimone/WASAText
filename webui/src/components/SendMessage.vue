@@ -1,145 +1,133 @@
-<script>
-    import { ref, nextTick } from 'vue';
+<script setup>
+    import { ref, nextTick, defineProps, defineEmits } from 'vue';
     import EmojiPicker from 'vue3-emoji-picker';
     import 'vue3-emoji-picker/css';
-    import ImageMessage from '../components/ImageMessage.vue';
+    import ImageMessage from '../components/ImageMessage.vue'; // Assicurati che questo percorso sia corretto
     
-    export default {
-        name: 'SendMessage',
-        components: {
-            'emojipicker': EmojiPicker,
-            'imagemessage': ImageMessage,
-        },
-        props: [
-            'conversation', // Può essere oggetto conversazione o {name: 'utente'}
-            'isEnabled'     // Opzionale, per disabilitare esternamente
-        ],
-        emits: [
-            'send-message',
-        ],
-        setup(props, { emit }) {
-            
-            //State
-            const message = ref("");
-            const isEmojiPickerOpen = ref(false);
-            const showImageMessage = ref(false);
-            const image = ref(null);
+    // Props e Emits
+    const props = defineProps(['conversation', 'isEnabled']);
+    const emit = defineEmits(['send-message']);
     
-            // Funzioni
-            const toggleEmoji = () => {
-                isEmojiPickerOpen.value = !isEmojiPickerOpen.value;
-            };
+    // Stati
+    const message = ref("");
+    const isEmojiPickerOpen = ref(false);
+    const showImageMessage = ref(false);
+    const image = ref(null);
+    const inputRef = ref(null); // Riferimento all'input HTML
     
-            const toggleImageMessage = () => {
-                showImageMessage.value = !showImageMessage.value;
-                // Se apro immagine, pulisco testo e chiudo emoji
-                if(showImageMessage.value) {
-                    message.value = "";
-                    isEmojiPickerOpen.value = false;
-                }
-            };
+    // --- METODI ---
     
-            const sendMessage = () => {
-                // Validazione base
-                if (!message.value && !image.value) return;
+    const toggleEmoji = () => {
+        if (showImageMessage.value) return;
+        isEmojiPickerOpen.value = !isEmojiPickerOpen.value;
+    };
     
-                emit('send-message', message.value, image.value);
-                
-                // Reset
-                message.value = "";
-                image.value = null;
-                showImageMessage.value = false;
-                isEmojiPickerOpen.value = false;
-            };
-    
-            const onImageReady = (img, text) => {
-                // Callback dal componente ImageMessage quando l'utente conferma l'upload
-                image.value = img;
-                message.value = text || "";
-                sendMessage();
-            };
-    
-            const onSelectEmoji = (emoji) => {
-                // Aggiunge emoji alla posizione del cursore
-                const input = document.getElementById("inputRef");
-                if (!input) {
-                    message.value += emoji.i;
-                    return;
-                }
-    
-                const start = input.selectionStart;
-                const end = input.selectionEnd;
-                const text = message.value;
-                
-                const before = text.substring(0, start);
-                const after = text.substring(end, text.length);
-                
-                message.value = before + emoji.i + after;
-                
-                // Riposiziona cursore
-                nextTick(() => {
-                    input.focus();
-                    input.setSelectionRange(start + emoji.i.length, start + emoji.i.length);
-                });
-            };
-    
-            return {
-                message,
-                isEmojiPickerOpen,
-                showImageMessage,
-                image,
-                toggleEmoji,
-                toggleImageMessage,
-                sendMessage,
-                onSelectEmoji,
-                onImageReady
-            };
+    const toggleImageMessage = () => {
+        showImageMessage.value = !showImageMessage.value;
+        if(showImageMessage.value) {
+            isEmojiPickerOpen.value = false;
+            message.value = "";
         }
-    }
+    };
+    
+    const onImageReady = (img, text) => {
+        image.value = img;
+        message.value = text || "";
+        sendMessage();
+    };
+    
+    const onSelectEmoji = (emoji) => {
+        // emoji.i è il carattere (es. 😀)
+        if (!emoji || !emoji.i) return;
+        
+        const char = emoji.i;
+        const input = inputRef.value;
+    
+        if (input) {
+            // Inserimento alla posizione del cursore
+            const start = input.selectionStart || 0;
+            const end = input.selectionEnd || 0;
+            const text = message.value;
+    
+            const before = text.substring(0, start);
+            const after = text.substring(end, text.length);
+    
+            message.value = before + char + after;
+    
+            // Rimette il focus e sposta il cursore dopo l'emoji
+            nextTick(() => {
+                input.focus();
+                const newPos = start + char.length;
+                input.setSelectionRange(newPos, newPos);
+            });
+        } else {
+            // Fallback se l'input non è pronto
+            message.value += char;
+        }
+    };
+    
+    const sendMessage = () => {
+        // Evita invio vuoto
+        if ((!message.value || message.value.trim() === "") && !image.value) return;
+    
+        emit('send-message', message.value, image.value);
+    
+        // Reset
+        message.value = "";
+        image.value = null;
+        showImageMessage.value = false;
+        isEmojiPickerOpen.value = false;
+    
+        // Focus
+        nextTick(() => {
+            if(inputRef.value) inputRef.value.focus();
+        });
+    };
     </script>
     
     <template>
         <div class="chatbox-input">
             
-            <div v-if="isEmojiPickerOpen" class="emoji-wrapper">
-                 <div class="click-outside" @click="isEmojiPickerOpen = false"></div>
+            <div v-if="isEmojiPickerOpen">
+                <div class="click-overlay" @click="isEmojiPickerOpen = false"></div>
                 
-                <emojipicker 
-                    :native="true"
-                    :hide-search="false"
-                    :disable-skin-tones="true"
-                    :hide-group-names="true"
-                    :disabled-groups='["food_drink", "activities", "travel_places", "objects", "symbols", "flags"]' 
-                    @select="onSelectEmoji"
-                    class="picker-custom"
-                />
+                <div class="emoji-popup">
+                    <EmojiPicker 
+                        :native="true"
+                        :hide-search="false"
+                        :disable-skin-tones="true"
+                        :hide-group-names="true"
+                        :disabled-groups='["food_drink", "activities", "travel_places", "objects", "symbols", "flags"]'
+                        @select="onSelectEmoji"
+                    />
+                </div>
             </div>
     
-            <i class="grin" @click="toggleEmoji" title="Emoji"></i>
+            <i class="icon-btn grin" @click="toggleEmoji" title="Emoji"></i>
+            <i class="icon-btn clip" @click="toggleImageMessage" title="Foto"></i>
     
-            <i class="paperclip" @click="toggleImageMessage" title="Allega Immagine"></i>
-            
-            <imagemessage 
+            <ImageMessage 
                 v-if="showImageMessage"
                 @add-image-cancel="toggleImageMessage"
                 @add-image="onImageReady"
             />
     
             <input 
-                id="inputRef" 
+                ref="inputRef"
                 type="text" 
+                class="msg-input"
                 placeholder="Scrivi un messaggio..." 
                 v-model="message" 
                 @keyup.enter="sendMessage"
                 autocomplete="off"
             >
             
-            <i class="paperplane" @click="sendMessage" title="Invia"></i>
+            <i class="icon-btn plane" @click="sendMessage" title="Invia"></i>
         </div>
     </template>
     
     <style scoped>
-    /* --- CONTENITORE --- */
+    /* STESSI STILI DI PRIMA, MA SICURI */
     .chatbox-input {
         position: relative;
         width: 100%;
@@ -149,76 +137,63 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 10px;
-        z-index: 50;
+        padding: 10px 15px;
+        z-index: 50; 
     }
     
-    /* --- ICONE --- */
-    .chatbox-input i {
-        cursor: pointer;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: background 0.2s;
-        flex-shrink: 0;
+    /* OVERLAY SFONDO */
+    .click-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 900;
     }
     
-    .chatbox-input i:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+    /* POPUP EMOJI */
+    .emoji-popup {
+        position: absolute;
+        bottom: 75px; /* Sopra la barra input */
+        left: 10px;
+        z-index: 1000;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #1e293b;
     }
     
-    /* Icone SVG tramite Pseudo-elementi */
-    .grin::after { content: url('/emoji.svg'); filter: invert(0.6); width: 24px; }
-    .paperclip::after { content: url('/attach.svg'); filter: invert(0.6); width: 24px; }
-    .paperplane::after { content: url('/send_message.svg'); filter: invert(0.6); width: 24px; margin-left: 4px; }
-    
-    /* Hover effect sulle icone (Verde Acqua) */
-    .chatbox-input i:hover::after {
-        filter: invert(73%) sepia(35%) saturate(827%) hue-rotate(124deg) brightness(93%) contrast(88%);
-    }
-    
-    /* --- INPUT TEXT --- */
-    .chatbox-input input {
+    .msg-input {
         flex-grow: 1;
         padding: 10px 15px;
         border-radius: 20px;
-        font-size: 0.95em;
         border: 1px solid #334155;
         background-color: #0f172a;
         color: #f1f5f9;
         outline: none;
+        font-size: 0.95rem;
     }
-    .chatbox-input input:focus {
-        border-color: #2dd4bf;
-    }
+    .msg-input:focus { border-color: #2dd4bf; }
     
-    /* --- EMOJI PICKER WRAPPER --- */
-    .emoji-wrapper {
-        position: absolute;
-        bottom: 70px; /* Sopra la barra input */
-        left: 10px;
-        z-index: 100;
+    .icon-btn {
+        width: 36px; height: 36px; cursor: pointer;
+        background-repeat: no-repeat; background-position: center; background-size: 24px;
+        filter: invert(0.7); transition: 0.2s;
     }
+    .icon-btn:hover { filter: invert(1); }
     
-    /* Sfondo invisibile per chiudere cliccando fuori */
-    .click-outside {
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        z-index: -1; 
-    }
+    /* Assicurati che i file SVG esistano nella cartella public */
+    .grin { background-image: url('/emoji.svg'); }
+    .clip { background-image: url('/attach.svg'); }
+    .plane { background-image: url('/send_message.svg'); margin-left: 5px; }
     
-    /* Stili libreria picker (deep selector) */
+    /* Override CSS Picker */
     :deep(.v3-emoji-picker) {
-        background: #0f172a;
-        border: 1px solid #334155;
-        --ep-color-bg: #0f172a;
+        background: #1e293b;
+        border: 1px solid #475569;
+        --ep-color-bg: #1e293b;
         --ep-color-text: #f1f5f9;
         --ep-color-border: #334155;
-        --ep-color-hover: #1e293b;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        --ep-color-hover: #334155;
+        --ep-search-bg: #0f172a;
+        --ep-search-text: #f1f5f9;
         height: 300px;
         width: 300px;
     }
