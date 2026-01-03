@@ -120,7 +120,7 @@
               <button type="button" class="btn-custom btn-save" @click="setName()">Salva</button>
           </div>
   
-          <div class="infoname">Photo:</div>  
+          <div class="infoname">Foto:</div>  
           <div id="xPhoto" class="camera Photo">
               <div class="img-wrapper">
                   <img id="pimg" v-if="ievent && ievent.photo == ''" src="/standard2.gif"/>
