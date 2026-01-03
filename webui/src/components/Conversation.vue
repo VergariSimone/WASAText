@@ -28,10 +28,9 @@
                 showNewChatModal: false,
                 showGroupModal: false,
                 
-                // --- NUOVO: Variabili per Inoltro ---
+                // inoltro
                 showForwardModal: false,
                 messageToForward: null,
-                // ------------------------------------
 
                 targetUserNewChat: null,
                 selectedUsersList: [],
@@ -64,9 +63,9 @@
             }
         },
         methods: {
-            refresh() { this.$emit('refresh'); },
-            logout() { this.$emit('logout'); },
-            info() { this.$emit('show-user-info'); },
+            refresh() { this.$emit('refresh'); }, // ricarica
+            logout() { this.$emit('logout'); }, // esci
+            info() { this.$emit('show-user-info'); }, // info utente
             clearError() { this.errormsg = null; },
             
             scrollToBottom() {
@@ -76,12 +75,13 @@
                 });
             },
             
+            // formato orario
             formatTime(ts) {
                 if (!ts) return '';
                 return new Date(ts + 'Z').toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
             },
     
-            // --- GESTIONE NUOVA CHAT ---
+            // nuova chat
             async startNewChat() {
                 this.showNewChatModal = true;
                 this.targetUserNewChat = null;
@@ -92,6 +92,7 @@
                 } catch (e) { this.errormsg = "Errore caricamento utenti"; }
             },
     
+            // utenti selezionati per la nuova chat
             onUserSelectedForChat(users) {
                 let user = Array.isArray(users) ? users[0] : users;
                 if (!user) return;
@@ -100,12 +101,13 @@
                 this.showNewChatModal = false;
             },
     
+            // annulla new chat
             cancelNewChat() {
                 this.showNewChatModal = false;
                 this.targetUserNewChat = null;
             },
     
-            // --- GESTIONE GRUPPI ---
+            // gruppi
             async startNewGroup() {
                 this.showGroupModal = true;
                 try {
@@ -114,6 +116,7 @@
                 } catch (e) {}
             },
     
+            // crea gruppo
             async createGroup(users) {
                 this.showGroupModal = false;
                 var out = [];
@@ -124,38 +127,34 @@
                 } catch (e) { this.errormsg = e.toString(); }
             },
 
-            // --- NUOVO: GESTIONE INOLTRO ---
+            // inoltro messaggi
             async startForwardingSearch() {
                 this.selectedUsersList = [];
                 try {
-                    // Carica lista utenti per l'inoltro
+                    // carico lista utenti per l'inoltro
                     let res = await this.$axios.get(`/users?search=`, { headers: { Authorization: "Bearer " + this.token } });
                     this.selectedUsersList = Array.isArray(res.data) ? res.data : [res.data];
                 } catch (e) { this.errormsg = "Errore caricamento utenti"; }
             },
 
+            
             async executeForward(users) {
                 this.showForwardModal = false;
-                // Prendi il primo utente selezionato
                 let targetUser = Array.isArray(users) ? users[0] : users;
                 
                 if (!targetUser || !this.messageToForward) return;
 
                 let formData = new FormData();
                 
-                // Copia il testo se esiste
+                // copio testo mess
                 if (this.messageToForward.text) {
                     formData.append('text', this.messageToForward.text);
                 }
-                
-                // Aggiungi flag inoltro (opzionale, se il backend lo supporta)
                 formData.append('isforwarded', '1');
 
-                // NOTA: Inoltrare le immagini Base64 richiede logica backend specifica o conversione Blob.
-                // Qui stiamo inoltrando principalmente il testo.
 
                 try {
-                    // Invia alla chat del destinatario
+                    // invio chat destinazione 
                     await this.$axios.post(
                         `/conversations?conversation=${targetUser}`, 
                         formData, 
@@ -163,19 +162,15 @@
                     );
 
                     alert("Messaggio inoltrato a " + targetUser);
-                    
-                    // Pulizia
+
                     this.messageToForward = null;
-                    // Opzionale: se vuoi spostarti nella chat dove hai inoltrato, potresti fare un refresh o cambio chat
-                    // this.refresh();
 
                 } catch (e) {
                     this.errormsg = "Errore durante l'inoltro: " + e.toString();
                 }
             },
-            // -------------------------------
     
-            // --- INVIO MESSAGGI ---
+            // invio mess
             async handleSend(text, image) {
                 this.errormsg = null;
                 if (this.targetUserNewChat) await this.sendToNewUser(text, image);
@@ -183,6 +178,7 @@
                 else this.errormsg = "Errore: Nessuna chat attiva.";
             },
     
+            // invio new utente
             async sendToNewUser(text, image) {
                 let formData = new FormData();
                 if (text) formData.append('text', text);
@@ -195,6 +191,7 @@
                 } catch (e) { this.errormsg = "Errore invio: " + e.toString(); }
             },
     
+            // invia mess a chat esistente
             async sendToExistingChat(text, image) {
                 let formData = new FormData();
                 if (text) formData.append('text', text);
@@ -208,11 +205,12 @@
                 } catch (e) { this.errormsg = "Errore invio: " + e.toString(); }
             },
     
-            // --- MENU & AZIONI ---
+            // menu e opzioni
             showContextMenu(e, msg) {
                 this.selectedMessage = msg;
                 const isMyMessage = (msg.login === this.login);
 
+                // mio mess 
                 if (isMyMessage) {
                     this.optionsmessage = [
                         { name: 'Reagisci', slug: 'comment' },
@@ -221,7 +219,7 @@
                         { type: 'divider' },
                         { name: 'Elimina', slug: 'delete' }
                     ];
-                } else {
+                } else { // mess altro utente
                     this.optionsmessage = [
                         { name: 'Reagisci', slug: 'comment' },
                         { name: 'Rispondi', slug: 'reply' },
@@ -243,19 +241,17 @@
                 } else if (slug === 'delete') {
                     this.deleteMsg(msg);
                 } else if (slug === 'forward') {
-                    // --- NUOVO: GESTIONE CLICK MENU INOLTRA ---
                     this.messageToForward = msg;
                     this.showForwardModal = true;
                     this.startForwardingSearch();
                 }
             },
     
+            // invio reazione 
             async sendReaction(emojiChar) {
                 if (!this.selectedMessage) return;
                 this.showEmojiModal = false;
 
-                // 1. CERCHIAMO SE HO GIÀ MESSO QUESTA REAZIONE
-                // Cerchiamo nei commenti del messaggio se c'è un commento MIO con la STESSA emoji
                 const existingReaction = this.selectedMessage.comments 
                     ? this.selectedMessage.comments.find(c => c.username === this.login && c.emoji === emojiChar)
                     : null;
@@ -265,23 +261,21 @@
 
                 try {
                     if (existingReaction) {
-                        // === CASO DELETE: LA REAZIONE ESISTE GIÀ, LA RIMUOVO ===
+                        // caso DELETE: la reaction esiste , la levo
                         
-                        // Aggiornamento Ottimistico (Rimuovo visivamente subito)
+                        
                         const idx = this.selectedMessage.comments.indexOf(existingReaction);
                         if (idx > -1) this.selectedMessage.comments.splice(idx, 1);
 
-                        // Chiamata API DELETE
-                        // Nota: Serve l'ID del commento (commId) che abbiamo trovato
                         await this.$axios.delete(
                             `/conversations/byid/${conid}/message/${mesid}/comment/${existingReaction.commId}`, 
                             { headers: { Authorization: "Bearer " + this.token } }
                         );
 
                     } else {
-                        // === CASO POST: LA REAZIONE NON C'È, LA AGGIUNGO ===
+                        // caso POST: la reaction non ce , la aggiungo
                         
-                        // Aggiornamento Ottimistico
+                        
                         const fakeReaction = {
                             commId: Date.now(),
                             emoji: emojiChar,
@@ -290,7 +284,6 @@
                         if (!this.selectedMessage.comments) this.selectedMessage.comments = [];
                         this.selectedMessage.comments.push(fakeReaction);
 
-                        // Chiamata API POST
                         await this.$axios.post(
                             `/conversations/byid/${conid}/message/${mesid}/comment`, 
                             { text: emojiChar }, 
@@ -307,6 +300,7 @@
                 }
             },
     
+            // eliminazione messaggio
             async deleteMsg(msg) {
                 try {
                     const conversationID = msg.conid || this.selectedconvs.conid;
@@ -335,6 +329,7 @@
                 return 'sent';
             },
     
+
             toggleEmojiPopup(commId) {
                 let el = document.getElementById('co' + commId);
                 if(el) el.style.visibility = (el.style.visibility == 'visible') ? 'hidden' : 'visible';
@@ -355,7 +350,7 @@
                     </div>
                     <div class="header-actions">
                         <button class="btn btn-icon" @click="refresh" title="Refresh">↻</button>
-                        <button class="btn btn-icon" @click="info" title="Info Utente">ℹ️</button>
+                        <button class="btn btn-icon" @click="info" title="Info Utente">Profilo</button>
                         <button v-if="targetUserNewChat" class="btn btn-danger btn-sm ms-2" @click="cancelNewChat">Annulla</button>
                         <div v-else class="d-inline-block ms-2">
                             <button class="btn btn-outline-light btn-sm me-1" @click="startNewGroup">Gruppo</button>
@@ -372,7 +367,7 @@
                 <div v-if="!targetUserNewChat && selectedconvs">
                     
                     <div v-if="sv && sv.limit == selectedconvs.message.length" class="load-more" @click="$emit('list-next')">
-                        ▲ Carica messaggi precedenti
+                        carica messaggi precedenti
                     </div>
                     
                     <div v-for="msg in sortedMessages" :key="msg.mesid" 
@@ -380,7 +375,7 @@
                         
                         <div class="bubble" @contextmenu.prevent="showContextMenu($event, msg)">
                             <div v-if="msg.login !== login" class="sender-name">{{ msg.username }}</div>
-                            <div v-if="msg.isforwarded > 0" class="forwarded-tag">↩ Inoltrato</div>
+                            <div v-if="msg.isforwarded > 0" class="forwarded-tag">Inoltrato</div>
     
                             <div v-if="msg.replyedtext || msg.replyedphoto" class="reply-preview">
                                 <div class="reply-author">{{ msg.replyedusername }}</div>
@@ -415,7 +410,7 @@
                     </div>
     
                     <div v-if="sv && sv.start != 0" class="load-more" @click="$emit('list-previous')">
-                        ▼ Torna ai messaggi recenti
+                        torna ai messaggi recenti
                     </div>
                 </div>
     
@@ -437,7 +432,7 @@
                         <span class="text-info fw-bold">{{ replyToMessage.username }}</span>
                         <span class="ms-2 text-muted small">{{ replyToMessage.text }}</span>
                     </div>
-                    <button class="btn-close-reply" @click="replyToMessage = null">✕</button>
+                    <button class="btn-close-reply" @click="replyToMessage = null">x</button>
                 </div>
     
                 <sendmessage 
@@ -497,14 +492,14 @@
     
     <style>
         .vue-simple-context-menu {
-                position: fixed !important; /* Si ancora alla finestra, non al div */
-                z-index: 10000 !important;  /* Assicura che sia sopra a tutto */
+                position: fixed !important; /*si fissa alla finestra non a div*/
+                z-index: 10000 !important;  /* sia sopra a tutto */
                 max-height: 100vh;
                 overflow-y: auto;
         }
     </style>
     <style scoped>
-    /* ================= LAYOUT ================= */
+    /*layout*/
     .chat-wrapper {
         display: flex;
         flex-direction: column;
@@ -537,7 +532,7 @@
         border-top: 1px solid #334155;
     }
     
-    /* ================= MESSAGGI ================= */
+    /* messaggi */
     .msg-row { display: flex; margin-bottom: 15px; width: 100%; }
     .msg-me { justify-content: flex-end; }
     .msg-friend { justify-content: flex-start; }
@@ -566,23 +561,23 @@
         display: flex; justify-content: flex-end; align-items: center;
     }
     
-    /* Spunte */
+    /* spunte per i messaggi */
     .tick-read { color: #22d3ee; }
     .tick-received { color: #cbd5e1; }
     .tick-sent { color: #94a3b8; }
     
-    /* Reazioni */
+    /* reaction */
     .reactions-badge {
         position: absolute;
-        bottom: -10px; /* Spingi un po' più in basso */
+        bottom: -10px; 
         right: -5px;
         background: #1e293b;
         border: 2px solid #0f172a;
         border-radius: 12px;
         padding: 2px 6px;
-        font-size: 1.1rem; /* Un po' più grande */
+        font-size: 1.1rem; 
         cursor: pointer;
-        z-index: 10; /* Deve essere sopra a tutto */
+        z-index: 10; 
         box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     .reactions-popup {
@@ -592,14 +587,14 @@
         box-shadow: 0 5px 10px rgba(0,0,0,0.3);
     }
     
-    /* Reply Preview */
+    /* anteprima "rispondi"*/
     .reply-preview {
         border-left: 3px solid #cbd5e1; padding-left: 8px; margin-bottom: 6px;
         background: rgba(0,0,0,0.2); border-radius: 0 4px 4px 0; font-size: 0.85rem;
     }
     .reply-author { font-weight: bold; color: #5eead4; }
     
-    /* Reply Bar */
+    /* barra "rispondi" */
     .reply-bar {
         background: #0f172a; padding: 6px 10px; border-radius: 6px;
         margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
@@ -607,7 +602,7 @@
     }
     .btn-close-reply { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; }
     
-    /* ================= MODALI ================= */
+    /*modali*/
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background: rgba(0,0,0,0.7); z-index: 1000;
@@ -620,7 +615,7 @@
     }
     .small-box { width: auto; min-width: 250px; }
     
-    /* ================= UTILS ================= */
+    /* utilities */
     .load-more {
         text-align: center; color: #10b981; padding: 8px; cursor: pointer;
         background: rgba(16,185,129,0.1); border-radius: 6px; margin: 10px auto; width: 80%;
@@ -630,6 +625,7 @@
     .btn-icon { background: none; border: 1px solid #475569; color: #fff; border-radius: 4px; cursor: pointer; margin-right: 5px; }
     .btn-close-custom { background: none; border: none; color: white; cursor: pointer; }
 
+    /* emoji */
     .emoji-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* 3 per riga */

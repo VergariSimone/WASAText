@@ -3,12 +3,11 @@
     import EmojiPicker from 'vue3-emoji-picker';
     import 'vue3-emoji-picker/css';
     
-    // Definiamo gli eventi
+    // evento
     const emit = defineEmits(['send-comment']);
     
-    // Funzione chiamata al click sull'emoji
+    // chiamata al click dell emoji
     const onSelectEmoji = (emoji) => {
-        // Emettiamo l'oggetto emoji
         emit('send-comment', emoji);
     };
     </script>
@@ -36,7 +35,7 @@
         background: transparent;
     }
     
-    /* Stili per adattare il picker al tema scuro */
+    /* stili per adattare il picker al tema scuro */
     :deep(.v3-emoji-picker) {
         width: 100% !important;
         max-width: 320px;

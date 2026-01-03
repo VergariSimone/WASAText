@@ -11,26 +11,29 @@
           'close-info',
       ],
       setup(props, { emit }) {
-          // Accesso all'istanza per usare $axios
+          // accesso all'istanza per usare $axios
           const { proxy } = getCurrentInstance();
           const $axios = proxy.$axios;
   
-          // --- State ---
+          // stati
           const name = ref(null);
   
-          // --- Methods ---
+          // metodi
   
+          // scegli file
           const chooseFiles = () => {
               document.getElementById("xmedia").click();
           };
   
+          // errore nome 
           const errorName = (status) => {
               if (status == 406) {
-                  alert("Username not acceptable or already used");
+                  alert("username non valido o gia esistente");
                   return;
               }
           };
   
+          // imposta nome
           const setName = async () => {
               
               name.value = document.getElementById("iname").value;
@@ -56,6 +59,7 @@
               }
           };
   
+          // imposta foto
           const setPhoto = async (e) => {
               var files = e.target.files || e.dataTransfer.files;
               if (!files.length) return;
@@ -80,6 +84,7 @@
               }
           };
   
+          // chiusura pannello info
           const close = () => {
               emit('close-info');
           };
@@ -98,10 +103,10 @@
   <template>
       <div class="icontainer">
           <div class="header-spacer"></div>
-          <h5>View/Set Information</h5>
+          <h5>Impostazioni Profilo</h5>
           <div class="header-spacer"></div>
       
-          <div class="infoname">Name:</div>
+          <div class="infoname">Nome:</div>
           <div class="input-wrapper">
               <input 
                   maxlength="32"
@@ -112,7 +117,7 @@
               />
           </div> 
           <div class="action">
-              <button type="button" class="btn-custom btn-save" @click="setName()">Save</button>
+              <button type="button" class="btn-custom btn-save" @click="setName()">Salva</button>
           </div>
   
           <div class="infoname">Photo:</div>  
@@ -131,27 +136,27 @@
                   hidden
                   @change="(event) => setPhoto(event)"
               />
-              <div class="btn-custom marginal" @click="chooseFiles()" id="upload">Upload image</div>
+              <div class="btn-custom marginal" @click="chooseFiles()" id="upload">carica immagine </div>
           </div>
   
           <div></div>
           <div>
-              <div class="btn-custom semimarginal" @click="close()" id="closeinfo">Close</div>
+              <div class="btn-custom semimarginal" @click="close()" id="closeinfo">chiudi</div>
           </div>
           <div></div>
       </div>    
   </template>
   
   <style scoped>
-  /* --- TEMA DARK MODE / BLU NOTTE --- */
+
   
   .icontainer {
       display: grid;
-      grid-template-columns: 20% 50% 30%; /* Layout a griglia aggiustato */
+      grid-template-columns: 20% 50% 30%; /* layout a griglia */
       position: relative;
       top: 50px;
       
-      background-color: #1e293b; /* Grigio Bluastro */
+      background-color: #1e293b; 
       border: 1px solid #334155;
       border-radius: 12px;
       padding: 20px;
@@ -159,13 +164,13 @@
       
       color: #f1f5f9;
       width: fit-content;
-      margin: 0 auto; /* Centratura */
+      margin: 0 auto; /* Centrato */
       align-items: center;
       gap: 10px;
   }
   
   .icontainer h5 {
-      color: #2dd4bf; /* Verde Acqua */
+      color: #2dd4bf; 
       font-weight: 700;
       grid-column: 2;
       text-align: center;
@@ -175,17 +180,17 @@
   .infoname {
       text-align: right;
       font-weight: 600;
-      color: #94a3b8; /* Grigio chiaro */
+      color: #94a3b8; 
       padding-right: 10px;
   }
   
-  /* Input Styles */
+  /* input */
   .input-wrapper {
       width: 100%;
   }
   
   .input-custom {
-      background-color: #0f172a; /* Blu Notte profondo */
+      background-color: #0f172a; 
       width: 100%;
       border: 1px solid #334155;
       color: #f1f5f9;
@@ -199,7 +204,7 @@
       border-color: #2dd4bf;
   }
   
-  /* Button Styles */
+  /* bottoni */
   .btn-custom {
       background-color: transparent;
       border: 1px solid #475569;
@@ -230,7 +235,7 @@
       color: #fff;
   }
   
-  /* Photo Section */
+  /* selezione foto */
   .camera {
       width: 120px;
       height: 120px;
@@ -245,7 +250,7 @@
   }
   
   .Photo {
-      grid-column: 2; /* Centrato nella griglia */
+      grid-column: 2; /* centrato nella griglia */
   }
   
   .img-wrapper {
@@ -262,7 +267,7 @@
       object-fit: cover;
   }
   
-  /* Layout Utilities */
+  /* layout utilities */
   .action {
       display: flex;
       align-items: center;
@@ -279,7 +284,7 @@
   } 
   
   .marginal {
-      margin-top: 0; /* Resettato per flexbox alignment */
+      margin-top: 0; 
       white-space: nowrap;
   }
   

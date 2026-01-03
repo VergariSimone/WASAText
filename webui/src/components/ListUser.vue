@@ -6,7 +6,7 @@
         props: {
             users: { type: Array, default: () => [] },
             searchBar: { type: Boolean, default: true },
-            showOk: { type: Boolean, default: false }, // True = Selezione multipla (Gruppi), False = Singola (Nuova Chat)
+            showOk: { type: Boolean, default: false }, // true =selezione multipla x Gruppi, false = singola x nuova chat)
         },
         emits: [
             'send-users-list',
@@ -14,13 +14,13 @@
             'search-cancel',
         ],
         setup(props, { emit }) {
-            // --- State ---
+            //state
             const selected = ref([]);
             const searchText = ref("");
     
-            // --- Methods ---
+            // metodi
     
-            // Conferma selezione (Solo per gruppi)
+            // conferma selezione (solo x gruppi)
             const ok = () => {
                 if (selected.value.length > 0) {
                     emit('send-users-list', selected.value);    
@@ -38,15 +38,14 @@
             };
     
             const userChoose = (login) => {
-                // LOGICA 1: Selezione Singola (Nuova Chat)
+                // selezione singola (nuova chat)
                 if (!props.showOk) {
-                    // Emette subito un array con un solo utente
                     emit('send-users-list', [login]);
                     return;
                 }
     
-                // LOGICA 2: Selezione Multipla (Gruppi)
-                // Toggle selezione (Aggiungi/Rimuovi array)
+                // selezione multipla (gruppi)
+                //tToggle selezione (aggiungi/rimuovi array)
                 if (selected.value.includes(login)) {
                     const index = selected.value.indexOf(login);
                     if (index > -1) selected.value.splice(index, 1);
@@ -55,7 +54,7 @@
                 }
             };
     
-            // Helper per capire se un utente è selezionato (per il CSS)
+            // per capire se un utente è selezionato (CSS)
             const isSelected = (login) => {
                 return selected.value.includes(login);
             };
@@ -128,21 +127,23 @@
     </template>
     
     <style scoped>
-    /* --- CONTENITORE PRINCIPALE --- */
+
+
+    /* contenitore principale  */
     #listuser {
-        /* Rimosso display:none e position fixed che confliggevano */
+       
         background-color: #1e293b;
         border: 1px solid #334155;
         border-radius: 12px;
         padding: 15px;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-        width: 100%; /* Si adatta al contenitore padre (la modale) */
+        width: 100%; 
         height: 100%;
         display: flex;
         flex-direction: column;
     }
     
-    /* --- HEADER --- */
+    /* header*/
     .list-header {
         margin-bottom: 10px;
     }
@@ -152,7 +153,7 @@
         margin: 0;
     }
     
-    /* --- BOTTONI --- */
+    /* bottoni*/
     .btn-custom {
         background-color: transparent;
         border: 1px solid #475569;
@@ -181,7 +182,7 @@
         color: white;
     }
     
-    /* --- INPUT RICERCA --- */
+    /* input ricerca */
     .search-container {
         width: 100%;
     }
@@ -195,7 +196,7 @@
         width: 100%;
         outline: none;
         transition: border-color 0.2s;
-        padding-left: 35px; /* Spazio per icona */
+        padding-left: 35px; 
     }
     
     .listusersearch:focus {
@@ -208,10 +209,10 @@
         filter: invert(1) brightness(2); 
     }
     
-    /* --- LISTA SCROLLABILE --- */
+    /* lista scrollabile*/
     .listcontext {
         overflow-y: auto;
-        flex-grow: 1; /* Occupa lo spazio rimanente */
+        flex-grow: 1; /* occupa lo spazio rimanente */
         margin-top: 5px;
         border: 1px solid #334155;
         border-radius: 8px;
@@ -221,11 +222,11 @@
         max-height: 60vh;
     }
     
-    /* Scrollbar */
+    /* scrollbar */
     .listcontext::-webkit-scrollbar { width: 6px; }
     .listcontext::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 4px; }
     
-    /* --- CARD UTENTE --- */
+    /* card utente*/
     .user-card {
         width: 98%;
         cursor: pointer;
@@ -244,7 +245,7 @@
         background-color: #263344;
     }
     
-    /* Selezione attiva */
+    /* selezione attivata */
     .user-card-selected {
         background-color: rgba(13, 148, 136, 0.2) !important; /* Verde scuro trasparente */
         border-color: #2dd4bf !important;
@@ -267,7 +268,7 @@
         font-size: 1.2rem;
     }
     
-    /* --- IMG & TESTO --- */
+    /* immagini e testo */
     .user-card-img {
         height: 38px;
         width: 38px;

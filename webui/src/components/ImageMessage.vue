@@ -2,26 +2,27 @@
   import { ref } from 'vue';
   
   export default {
-      // Definizione degli eventi emessi
+      // eventi emessi
       emits: [
           'add-image',
           'add-image-cancel',
       ],
-      // Funzione setup esplicita (senza <script setup>)
+      
       setup(props, { emit }) {
           
-          // --- State Reattivo ---
+          // state
           const image = ref(null);
           const filled = ref(false);
           const text = ref(null);
   
-          // --- Methods ---
-          
+          // metodi
+
+          // scegli file
           const chooseFiles = () => {
-              // Accesso DOM diretto come richiesto
               document.getElementById("xmedia").click();
           };
   
+          // imposta foto
           const setPhoto = (e) => {
               var files = e.target.files || e.dataTransfer.files;
               if (!files.length) return;
@@ -29,8 +30,6 @@
               if (files[0]) {
                   image.value = files[0];
                   var reader = new FileReader();
-                  
-                  // Manipolazione diretta DOM
                   var element = document.getElementById("pimg");
                   
                   reader.readAsDataURL(files[0]);
@@ -46,7 +45,7 @@
           };
   
           const ok = () => {
-              // Recupero valore input text via DOM
+              
               var element = document.getElementById("xtext");
               text.value = element.value;
   
@@ -57,12 +56,11 @@
               }
           };
   
+
+          // cancella immagine 
           const cancel = () => {
               emit('add-image-cancel');
           };
-  
-          // --- Return ---
-          // Tutto ciò che deve essere usato nel template deve essere restituito qui
           return {
               image,
               filled,
@@ -81,11 +79,11 @@
           <div class="listbuttons">
               <i class="allspan">&nbsp;</i>
               <i></i>
-              <button type="button" @click="cancel" class="btn-custom">Cancel</button>
+              <button type="button" @click="cancel" class="btn-custom">Annulla</button>
               <i></i>
-              <button type="button" @click="chooseFiles()" id="upload" class="btn-custom">Upload</button>
+              <button type="button" @click="chooseFiles()" id="upload" class="btn-custom">Carica</button>
               <i></i>
-              <button type="button" @click="ok" class="btn-custom btn-send">Send</button>
+              <button type="button" @click="ok" class="btn-custom btn-send">Invia</button>
               <i></i>
               <i class="allspan">&nbsp;</i>
           </div>
@@ -93,7 +91,7 @@
               <div id="xPhoto" class="camera">
                   <div class="camera-inner">
                       <img id="pimg" class="camera-img" :class="{cornice:filled}"/>
-                      <span v-if="!filled" class="placeholder-text">Preview Image</span>
+                      <span v-if="!filled" class="placeholder-text">Anteprima immagine </span>
                   </div>
               </div>
               <input
@@ -104,36 +102,35 @@
                   @change="(event) => setPhoto(event)" />
               <br/>
           </div>
-          <input id="xtext" class="textimage" type="text" placeholder="Type text here..."/>
+          <input id="xtext" class="textimage" type="text" placeholder="Scrivi il tuo messaggio..."/>
       </div>
   </template>
   
   <style scoped>
-  /* --- CONFIGURAZIONE COLORI: Blu Notte / Verde Acqua / Bianco --- */
   
-  /* --- CONTENITORE PRINCIPALE --- */
+  /* div principale */
   #listimage {
       align-items: center;
-      background-color: #1e293b; /* Grigio Bluastro (Slate) */
+      background-color: #1e293b; 
       border: 1px solid #334155;
       border-radius: 12px;
       padding: 15px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Ombra profonda */
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); 
       position: fixed;
       width: 340px;
       height: fit-content;
-      z-index: 1001; /* Sopra tutto */
+      z-index: 1001; /* sopra tutto */
       top: 200px;
       left: 50%;
-      transform: translateX(-50%); /* Centrato orizzontalmente */
+      transform: translateX(-50%); /* centrato orizzontalmente */
   }
   
-  /* --- INPUT DI TESTO --- */
+  /* input text*/
   .textimage {
       border-radius: 8px;
-      background-color: #0f172a; /* Blu Notte profondo */
+      background-color: #0f172a; 
       border: 1px solid #334155;
-      color: #f1f5f9; /* Testo chiaro */
+      color: #f1f5f9; 
       margin-left: auto;
       margin-right: auto;
       display: block;
@@ -147,14 +144,14 @@
   }
   
   .textimage:focus {
-      border-color: #2dd4bf; /* Focus Verde Acqua */
+      border-color: #2dd4bf; 
   }
   
   .textimage::placeholder {
       color: #64748b;
   }
   
-  /* --- GRIGLIA PULSANTI --- */
+  /* griglia pulsanti*/
   .listbuttons {
       display: grid;
       grid-template-columns: 5% 25% 5% 25% 5% 25% 5%;
@@ -167,7 +164,7 @@
       height: 5px;
   }
   
-  /* --- STILE PULSANTI --- */
+  /* pulsanti */
   .btn-custom {
       background-color: transparent;
       border: 1px solid #475569;
@@ -188,7 +185,7 @@
   
   .btn-send {
       border-color: #0d9488;
-      color: #2dd4bf; /* Verde Acqua */
+      color: #2dd4bf; 
       font-weight: 600;
   }
   
@@ -199,7 +196,7 @@
       box-shadow: 0 0 10px rgba(45, 212, 191, 0.3);
   }
   
-  /* --- AREA PREVIEW IMMAGINE --- */
+  /* area anteprima imamgine  */
   .listcontext {
       display: flex;
       justify-content: center;
@@ -207,7 +204,7 @@
       height: 220px;
       margin-bottom: 15px;
       border-radius: 8px;
-      background-color: #0f172a; /* Sfondo scuro interno */
+      background-color: #0f172a;
       border: 1px dashed #334155;
       padding: 10px;
       position: relative;
@@ -238,14 +235,14 @@
       border-radius: 4px;
   }
   
-  /* Placeholder quando non c'è immagine */
+  /* placeholder quando non c'è immagine */
   .placeholder-text {
       color: #475569;
       font-size: 0.8rem;
       font-style: italic;
   }
   
-  /* Cornice quando l'immagine è caricata */
+  /* cornice quando l'immagine è caricata */
   .cornice {
       border: 2px solid #2dd4bf; /* Verde Acqua */
       box-shadow: 0 0 15px rgba(45, 212, 191, 0.2);

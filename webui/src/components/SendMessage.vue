@@ -12,9 +12,9 @@
             return {
                 text: "",
                 showEmojiPicker: false,
-                showImageMessage: false, // Stato per il modale foto
+                showImageMessage: false, 
                 
-                // La tua lista di emoji
+                // lista di emoji
                 emojis: [
                     '😀', '😂', '😍', '🥺', '😎', '😭', '😡', '👍', '👎', '❤️', 
                     '🔥', '🎉', '👋', '🙏', '👀', '💩', '👻', '🤖', '💀', '🤡',
@@ -23,57 +23,56 @@
             }
         },
         methods: {
-            // --- GESTIONE INVIO NORMALE ---
+            // invio normale 
             sendMessage() {
-                // Se non c'è testo e non c'è modale foto aperto, non fare nulla
+                // se non c'è testo e non c'è modale foto aperto, non fare nulla
                 if (!this.text.trim()) return;
     
-                // Emette solo testo (le immagini passano da onImageReady)
+                // emette solo testo 
                 this.$emit('send-message', this.text, null);
                 
                 this.text = "";
                 this.showEmojiPicker = false;
                 
-                // Rimetti il focus
+                // focus
                 this.$nextTick(() => {
                     if(this.$refs.msgInput) this.$refs.msgInput.focus();
                 });
             },
     
-            // --- GESTIONE EMOJI ---
+            // gestise emoji
             toggleEmoji() {
-                this.showImageMessage = false; // Chiude modale foto se aperto
+                this.showImageMessage = false; 
                 this.showEmojiPicker = !this.showEmojiPicker;
             },
     
             addEmoji(emoji) {
                 this.text += emoji;
-                // Opzionale: Mantieni il focus sulla textarea
                 this.$nextTick(() => {
                     if(this.$refs.msgInput) this.$refs.msgInput.focus();
                 });
             },
     
-            // --- GESTIONE MODALE FOTO ---
+            // gestione modale foto
             toggleImageMessage() {
-                this.showEmojiPicker = false; // Chiude emoji se aperte
+                this.showEmojiPicker = false; // chiude emoji
                 this.showImageMessage = !this.showImageMessage;
                 if (this.showImageMessage) {
-                    this.text = ""; // Pulisce il testo se si apre il modale
+                    this.text = ""; // pulizia testo
                 }
             },
     
-            // Callback che riceve i dati dal componente ImageMessage
+            // callback che riceve i dati dal componente ImageMessage
             onImageReady(img, caption) {
-                // Emette l'evento con immagine e testo opzionale
+                // emette l'evento con immagine e testo
                 this.$emit('send-message', caption, img);
                 
-                // Chiude e resetta
+                // chiude e resetta
                 this.showImageMessage = false;
                 this.text = "";
             },
     
-            // --- GESTIONE TASTIERA ---
+            // gestione tastiera
             onKeydown(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -148,7 +147,7 @@
         z-index: 50; 
     }
     
-    /* --- STILE INPUT --- */
+    /* input*/
     .msg-input {
         flex-grow: 1;
         background: #0f172a;
@@ -165,7 +164,7 @@
     .msg-input:focus { border-color: #2dd4bf; }
     .msg-input:disabled { opacity: 0.6; cursor: not-allowed; }
     
-    /* --- BOTTONI E ICONE --- */
+    /* bottone icone */
     .icon-btn {
         background: none;
         border: none;
@@ -184,14 +183,12 @@
         width: 24px;
         height: 24px;
         display: block;
-        /* Filtro per invertire il nero in bianco su sfondo scuro.
-           Rimuovi se le tue icone sono già colorate. */
-        filter: invert(0.8);
+        filter: invert(0.8); /* inverte colori se icone scure */
         transition: filter 0.2s;
     }
     .icon-btn:hover .icon-img { filter: invert(1); }
     
-    /* --- BOTTONE INVIA --- */
+    /* bottone invia */
     .send-btn {
         background-color: #0ea5e9;
         width: 40px;
@@ -205,7 +202,7 @@
         margin-left: -2px;
     }
     
-    /* --- POPUP EMOJI --- */
+    /* popup emoji*/
     .emoji-picker-box {
         position: absolute;
         bottom: 70px;

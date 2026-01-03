@@ -18,44 +18,44 @@
 			const $axios = proxy.$axios;
 			const router = useRouter();
 	
-			// --- Refs ai componenti figli ---
+			// riferimenti componenti figli
 			const conversationRef = ref(null);
 			const vueConversationMenu = ref(null);
 			const vueGroupMenu = ref(null);
 	
-			// --- State Reattivo ---
+			// stato
 			const sv = reactive({ start: 0, limit: 50, last: null });
 			
-			// Modali
+			// modali
 			const showInfo = ref(false);
-			const showUserGroup = ref(false); // Mostra membri gruppo
-			const showList = ref(false);      // Mostra ricerca utenti generica (es. aggiungi a gruppo)
+			const showUserGroup = ref(false); 
+			const showList = ref(false);    
 	
-			// Dati
+			// dati di accesso
 			const token = ref(null);
 			const login = ref(null);
 			const loading = ref(false);
 			const errormsg = ref(null);
 			
-			// Selezioni
+			// selezioni
 			const selectedconvs = ref(null);
-			const searchSelectedConv = ref(null); // ID conversazione target per operazioni (add user, etc)
+			const searchSelectedConv = ref(null); // ID conversazione per operazioni 
 			
-			// Liste Dati
-			const usersGroups = ref([]);    // Membri di un gruppo
-			const selectedusers = ref([]);  // Risultati ricerca utenti
-			const convs = reactive({ items: [] }); // Lista conversazioni sidebar
+			// liste di dati
+			const usersGroups = ref([]);    
+			const selectedusers = ref([]);  // ris ricerca utenti
+			const convs = reactive({ items: [] }); // lista conversazioni sidebar
 	
-			// Info Panel
+			// pannello info
 			const ievent = ref(null);
 			const itype = ref(null);
 	
-			// Utils
+			// utilities
 			const refreshInterval = ref(null);
 			const topX = ref(0);
 			const topY = ref(0);
 	
-			// Menu Options
+			// opzioni menu
 			const optionsconversation = [
 				{ name: 'Apri', slug: 'open' },
 				{ type: 'divider' },
@@ -71,9 +71,8 @@
 				{ name: 'Abbandona gruppo', slug: 'leave' },
 			];
 	
-			// --- METHODS ---
 	
-			// Posizionamento Popup (obsoleto con le nuove modali centrate, ma mantenuto per compatibilità)
+			// posizionamento popup 
 			const calcPosition = (element) => {
 				if(!element) return [0,0];
 				var html = document.documentElement;
@@ -91,18 +90,20 @@
 				return false;
 			};
 	
+			// timestamp
 			const convertTimestamp = (timestamp) => {
 				if(!timestamp) return "";
 				const localDate = new Date(`${timestamp}Z`);
 				return localDate.toLocaleString("it-IT", { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 			};
 	
+			// da leggere
 			const resetToread = (conid) => {
 				let cvs = convs.items.find(c => c.conid == conid);
 				if (cvs) cvs.toread = 0;
 			};
 	
-			// Carica messaggi di una conversazione specifica
+			// messaggi conv specifica
 			const choose = async (conid) => {
 				resetToread(conid);
 				errormsg.value = null;
@@ -117,7 +118,7 @@
 				} catch (e) { errormsg.value = e.toString(); }
 			};
 	
-			// Ricarica la lista conversazioni (Sidebar)
+			// ricerca lista conversazioni sidebar 
 			const refresh = async (chooseFlag = true) => {
 				loading.value = true;
 				token.value = sessionStorage.getItem('token');
@@ -131,13 +132,12 @@
 					convs.items = response.data;
 				} catch (e) { errormsg.value = e.toString(); }
 	
-				// Se c'è una conv selezionata, ricaricala per vedere nuovi messaggi
+				// if ce una conv selezionata, ricaricala per vedere nuovi messaggi
 				if (selectedconvs.value) {
 					if (isPresent(selectedconvs.value.conid, convs)) {
-						// Mantiene la selezione
-						// Opzionale: chiamare choose() qui se vuoi auto-aggiornare i messaggi aperti
+						// tiene la selezione 
 					} else if (convs.items.length > 0 && !selectedconvs.value) {
-						// Seleziona la prima se nulla è selezionato
+						// seleziona la prima se nulla è selezioanto
 						selectedconvs.value = convs.items[0];
 						choose(convs.items[0].conid);
 					}
@@ -148,7 +148,7 @@
 			const listNext = () => { sv.start += sv.limit; choose(sv.last); };
 			const listPrevious = () => { sv.start = Math.max(sv.start - sv.limit, 0); choose(sv.last); };
 	
-			// Aggiungi utente a gruppo esistente (da Sidebar Context Menu)
+			// aggiunta utente a gruppo esistente
 			const addSelectedUsers = async (users) => {
 				showList.value = false;
 				var out = [];
@@ -173,7 +173,7 @@
 				topY.value = e.clientY;
 			};
 	
-			// Logica Ricerca Utenti (Generica)
+			// ricerca utenti 
 			const searchUsersAPI = async (search = "") => {
 				let config = { headers: { Authorization: "Bearer " + token.value } };
 				let response = await $axios.get(`/users?search=${search}`, config);
@@ -200,7 +200,7 @@
 				usersGroups.value = Array.isArray(users) ? users : [users];
 			};
 	
-			// Gestione Click Menu Contestuale
+			// gestione del click per menu 
 			const optionClicked = (event) => {
 				const slug = event.option.slug;
 				const item = event.item;
@@ -228,7 +228,7 @@
 			};
 	
 			const handleClick = (evt, conv) => {
-				// Mostra menu diverso se gruppo o user
+				//  menu diverso se gruppo o user
 				if (conv.categoryinfo == 'conversation') {
 					if(vueGroupMenu.value) vueGroupMenu.value.hideContextMenu();
 					if(vueConversationMenu.value) vueConversationMenu.value.showMenu(evt, conv);
@@ -238,7 +238,7 @@
 				}
 			};
 	
-			// Info Panel
+			// pannello info
 			const reloadInfo = async (infoType, conid) => {
 				let config = { headers: { Authorization: "Bearer " + token.value } };
 				if (itype.value == 'group') {
@@ -267,10 +267,10 @@
 				router.push({ name: 'Login' });
 			};
 	
-			// Eventi emessi da Conversation.vue
+			
 			const changeSelectedConv = (newconv) => {
 				selectedconvs.value = newconv;
-				refresh(false); // Aggiorna sidebar per muovere la chat in alto
+				refresh(false); // aggiorna sidebar per muovere la chat in alto
 			};
 	
 			const changeSelectedConvByid = async (newconvid) => {
@@ -278,11 +278,11 @@
 				choose(newconvid);
 			};
 	
-			// Lifecycle
+			// lifecycle
 			onMounted(() => {
 				refresh();
 				if (refreshInterval.value === null) {
-					refreshInterval.value = setInterval(() => refresh(false), 5000); // Polling ogni 5s
+					refreshInterval.value = setInterval(() => refresh(false), 5000); 
 				}
 			});
 	
@@ -291,13 +291,13 @@
 			});
 	
 			return {
-				// Refs
+				// refs
 				conversationRef, vueConversationMenu, vueGroupMenu,
-				// State
+				// state
 				sv, showInfo, showUserGroup, usersGroups, ievent, itype, errormsg, token, login,
 				showList, selectedconvs, searchSelectedConv, selectedusers, convs,
 				optionsconversation, optionsgroup,
-				// Methods
+				// Metodi
 				listNext, listPrevious, addSelectedUsers, leaveGroup, 
 				usersSearchAgain, usersSearch, usersGroupSearch,
 				optionClicked, handleClick, info, reloadInfo, classNumberToRead,
@@ -333,7 +333,7 @@
 											<div class="message">
 												<b v-if="cvs.sender">{{cvs.sender}}:</b> 
 												<span v-if="cvs.mcategory == 'text'">{{ cvs.mtext }}</span>
-												<span v-else>📷 Immagine</span>
+												<img v-else src="public/image.svg" alt="Immagine SVG" class="chat-img" />
 											</div>
 										</div>
 									</div>
@@ -409,7 +409,7 @@
 	</template>
 	
 	<style>
-	/* --- GLOBALI & LAYOUT --- */
+	
 	html, body {
 	  margin: 0; padding: 0; height: 100vh;
 	  background-color: #0f172a; color: #f1f5f9;
@@ -418,7 +418,7 @@
 	
 	.main-wrapper { height: 100vh; padding: 0; overflow: hidden; }
 	
-	/* --- SIDEBAR --- */
+	/* sidebar */
 	#sidebarMenu {
 		background-color: #1e293b;
 		border-right: 1px solid #334155;
@@ -438,7 +438,7 @@
 	
 	ul.no-bullets { list-style: none; padding: 0; margin: 0; }
 	
-	/* --- CONVERSATION CARD --- */
+	/* card conversazione */
 	div.conversation {
 		width: 95%; height: 72px;
 		display: flex; align-items: center;
@@ -483,7 +483,7 @@
 	}
 	.message b { color: #5eead4; margin-right: 4px; font-weight: 500; }
 	
-	/* --- MENU & BADGE --- */
+	/* menu e badge */
 	.numandmenu {
 		display: flex; flex-direction: column; align-items: center;
 		width: 25px; margin-left: 5px;
@@ -501,7 +501,7 @@
 	}
 	.yes { background-color: #2dd4bf; color: #0f172a; font-weight: bold; }
 	
-	/* --- AREA CHAT --- */
+	/* chat area */
 	.chat-area {
 		background-color: #0f172a;
 		height: 100vh;
@@ -509,7 +509,7 @@
 		position: relative;
 	}
 	
-	/* --- MODALI CENTRATE --- */
+	/* modali centrati*/
 	.modal-overlay {
 		position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
 		background: rgba(0,0,0,0.7); z-index: 1050;
@@ -521,7 +521,7 @@
 		border: 1px solid #475569; display: flex; flex-direction: column;
 	}
 	
-	/* --- OVERLAY INFO --- */
+	/* overlay info  */
 	.overlayInfo {
 		z-index: 2000; transition: 0.3s opacity;
 		background: rgba(15, 23, 42, 0.95);
@@ -530,7 +530,7 @@
 	}
 	.hiddenInfo { opacity: 0; pointer-events: none; }
 	
-	/* --- CONTEXT MENU DARK --- */
+	/* context menu */
 	.vue-simple-context-menu {
 		background-color: #1e293b !important;
 		border: 1px solid #334155 !important;

@@ -4,6 +4,7 @@
   
   <script setup>
 
+/** avvia la registrazione forzando la schermata di signup e reindirizza l'utente su /profile */
   
   const handleSignUp = () => {
     loginWithRedirect({

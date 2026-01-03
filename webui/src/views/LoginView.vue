@@ -9,10 +9,10 @@
           const $axios = proxy.$axios;
           const router = useRouter();
   
-          // --- State ---
+          // state
           const username = ref("");
   
-          // --- Methods ---
+          // metodi
   
           const login = async () => {
               sessionStorage.removeItem('token');
@@ -32,14 +32,14 @@
           };
   
           const register = () => {
-              alert("Coming soon ...");
+              alert("");
           };
   
-          // --- Lifecycle ---
+          
           onMounted(() => {
               let init = 1000;
               setTimeout(function() {
-                  // Logica originale per l'animazione di apertura
+                  // animazione di apertura
                   const wrapper = document.querySelector(".login-wrapper");
                   if(wrapper) wrapper.classList.toggle("open");
                   init = 300;
@@ -62,7 +62,7 @@
                   <img height="300" src="/wasatext_logo.png" alt="Logo">
               </div>
               <form class="login-right" @submit.prevent>
-                  <div class="h2">Welcome Back</div>
+                  <div class="h2">Bentornato!</div>
                   <div class="form-group">
                       <input type="text" id="username" placeholder=" " v-model="username">
                       <label for="username">Username</label>
@@ -76,13 +76,11 @@
   </template>
   
   <style scoped>
-  /* --- STILI DARK MODE / BLU NOTTE --- */
-  
   * {
       box-sizing: border-box;
   }
   
-  /* Sfondo pagina intera */
+  /* backgrpund pagina intera */
   #sandbox {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
@@ -94,58 +92,57 @@
       overflow: hidden;
   }
   
-  /* --- CARD LOGIN --- */
+  /* card per login*/
   .login-wrapper {
       width: 800px;
       height: 440px;
-      background-color: #1e293b; /* Card Bluastro Scuro */
+      background-color: #1e293b; 
       border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); /* Ombra profonda */
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); 
       overflow: hidden;
       position: relative;
       border: 1px solid #334155;
   }
   
-  /* --- LATO SINISTRO (Logo/Animazione) --- */
+  /* lato sx del login*/
   .login-left {
       width: 100%;
       height: 100%;
       display: flex;
       align-items: center;
-      justify-content: center; /* Centrato */
+      justify-content: center; 
       transition: all 770ms cubic-bezier(0.51, 0.04, 0.12, 0.99);
       overflow: hidden;
-      background-color: #0f172a; /* Più scuro per contrasto */
+      background-color: #0f172a; 
       position: relative;
       z-index: 2;
   }
   
+  /* lato sx login immagine */
   .login-left img {
       display: block;
       transition: all 770ms cubic-bezier(0.51, 0.04, 0.12, 0.99);
-      /* Filtro per adattare loghi neri al tema scuro, se necessario. Rimuovere se il logo è già chiaro */
-      /* filter: invert(1) brightness(2);  */
   }
   
-  /* Animazione Open */
+  /* animazzione */
   .open .login-left {
-      transform: translateX(-50%); /* Sposta a sinistra */
+      transform: translateX(-50%); /* verso sx*/
   }
   
   .open .login-left img {
-      transform: translateX(-50px) scale(0.8); /* Effetto parallasse */
-      opacity: 0.1; /* Logo svanisce leggermente */
+      transform: translateX(-50px) scale(0.8); /* effettp parallasse */
+      opacity: 0.1; 
   }
   
-  /* --- LATO DESTRO (Form) --- */
+  /* lato dx login form  */
   .login-right {
       padding: 60px 40px;
       position: absolute;
       top: 0;
       right: 0;
-      width: 50%; /* Occupa metà card */
+      width: 50%; 
       height: 100%;
-      transform: translateX(100%); /* Nascosto inizialmente a destra */
+      transform: translateX(100%); /* nascosto inizialmente a dx */
       transition: all 770ms cubic-bezier(0.51, 0.04, 0.12, 0.99);
       display: flex;
       flex-direction: column;
@@ -155,18 +152,18 @@
   }
   
   .open .login-right {
-      transform: translateX(0); /* Entra in scena */
+      transform: translateX(0); /* entra nella finestra */
   }
   
   .h2 {
-      color: #2dd4bf; /* Verde Acqua */
+      color: #2dd4bf; 
       font-size: 2rem;
       font-weight: 700;
       margin-bottom: 30px;
       text-align: center;
   }
   
-  /* --- INPUT FIELDS --- */
+  /* campi di imput  */
   .form-group {
       position: relative;
       margin-bottom: 25px;
@@ -190,7 +187,7 @@
       border-color: #2dd4bf;
   }
   
-  /* Label Flottante */
+  /* label fluttuante  */
   label {
       position: absolute;
       top: 50%;
@@ -204,16 +201,16 @@
       padding: 0 4px;
   }
   
-  /* Quando l'input ha focus o non è vuoto (usa placeholder hack) */
+  /* input ha focus o non è vuoto (u */
   input:focus + label,
   input:not(:placeholder-shown) + label {
       top: 0;
       font-size: 0.8rem;
       color: #2dd4bf;
-      background-color: #1e293b; /* Copre il bordo per leggibilità */
+      background-color: #1e293b; 
   }
   
-  /* Button Area */
+  /*area bottoni */
   .button-area {
       margin-top: 10px;
       display: flex;
