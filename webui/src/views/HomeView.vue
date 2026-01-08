@@ -333,7 +333,7 @@
 											<div class="message">
 												<b v-if="cvs.sender">{{cvs.sender}}:</b> 
 												<span v-if="cvs.mcategory == 'text'">{{ cvs.mtext }}</span>
-												<img v-else src="public/image.svg" alt="Immagine SVG" class="chat-img" />
+												<img v-else src="/image.svg" alt="Immagine SVG" class="chat-img" />
 											</div>
 										</div>
 									</div>

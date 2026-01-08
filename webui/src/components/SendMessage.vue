@@ -103,11 +103,11 @@
             </div>
     
             <button class="icon-btn" @click="toggleEmoji" :disabled="!isEnabled" title="Emoji">
-                <img src="public/emoji.svg" class="icon-img" alt="emoji">
+                <img src="/emoji.svg" class="icon-img" alt="emoji">
             </button>
     
             <button class="icon-btn" @click="toggleImageMessage" :disabled="!isEnabled" title="Foto">
-                <img src="public/attach.svg" class="icon-img" alt="foto">
+                <img src="/attach.svg" class="icon-img" alt="foto">
             </button>
     
             <ImageMessage 
@@ -127,7 +127,7 @@
             ></textarea>
             
             <button class="icon-btn send-btn" @click="sendMessage" :disabled="!isEnabled || !text.trim()">
-                <img src="public/send_message.svg" class="icon-img-send" alt="invia">
+                <img src="/send_message.svg" class="icon-img-send" alt="invia">
             </button>
     
         </div>

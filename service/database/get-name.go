@@ -340,7 +340,7 @@ func (db *appdbimpl) GetConversation(conid int, start int, limit int, token stri
 		m.Photo = b64.StdEncoding.EncodeToString(p)
 
 		m.Timestamp = m.Timestamp[:10] + " " + m.Timestamp[11:16]
-		
+
 		crows, cerr := db.c.Query(`SELECT c.id_com, c.id_msg, u.username, c.emoji
         FROM "Comments" c, Users u 
         WHERE c.id_msg = ? AND u.login=c.login 

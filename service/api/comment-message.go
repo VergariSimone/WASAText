@@ -1,13 +1,12 @@
 package api
 
 import (
-	"encoding/json" 
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
-	
 )
 
 type CommentRequest struct {
