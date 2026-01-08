@@ -69,152 +69,22 @@ type appdbimpl struct {
 	c *sql.DB
 }
 
-// NUOVA ISTANZA APP DATABASE
+// New accetta un DB già aperto e crea le tabelle se mancano
 func New(db *sql.DB) (AppDatabase, error) {
 	if db == nil {
-		return nil, errors.New("è necessario il databse quando si crea un AppDatabase")
+		return nil, errors.New("database is required when creating AppDatabase")
 	}
 
-	sqlStmt := `PRAGMA foreign_keys = ON`
-	_, ferr := db.Exec(sqlStmt)
-	if ferr != nil {
-		return nil, fmt.Errorf("errore durante l'abilitazione delle chiavi esterne: %w", ferr)
+	// 1. Abilita le Foreign Keys
+	// Questo è spesso il primo punto dove si nota se il file non è accessibile,
+	// ma se main.go l'ha aperto, qui dovrebbe funzionare.
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		return nil, fmt.Errorf("errore durante l'abilitazione delle chiavi esterne: %w", err)
 	}
 
-	// CONTROLLO SE LA TABELLA ESISTE ALTTRIENTI LA CREO
-	var tableName string
-	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Comments';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE IF NOT EXISTS "Comments" (
-						"id_com"	INTEGER NOT NULL,
-						"id_msg"	INTEGER NOT NULL,
-						"login"	TEXT NOT NULL,
-						"emoji"	TEXT NOT NULL,
-						PRIMARY KEY("id_com" AUTOINCREMENT),
-						CONSTRAINT "message" FOREIGN KEY("id_msg") REFERENCES "Messages"("id_msg") ON DELETE CASCADE,
-						CONSTRAINT "user" FOREIGN KEY("login") REFERENCES "Users"("login") ON DELETE CASCADE,
-						CONSTRAINT "comment" UNIQUE("id_msg", "login")
-					);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
-		}
-	}
-
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Conversations';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE IF NOT EXISTS "Conversations" (
-						"id_con"	INTEGER NOT NULL,
-						"category"	TEXT NOT NULL,
-						"name"	TEXT NOT NULL DEFAULT 'conversation',
-						"photo"	BLOB,
-						PRIMARY KEY("id_con" AUTOINCREMENT)
-					);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
-		}
-
-		sqlStmt = `INSERT INTO Conversations VALUES(0,'conversation', '', NULL)`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("ERRORE %w", err)
-		}
-	}
-
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Messages';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE IF NOT EXISTS "Messages" (
-						"id_msg"	INTEGER NOT NULL,
-						"id_con"	INTEGER,
-						"login"	TEXT,
-						"timestamp"	DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-						"text"	TEXT,
-						"photo" BLOB,
-						"category"  TEXT NOT NULL DEFAULT "text",
-						PRIMARY KEY("id_msg" AUTOINCREMENT),
-						CONSTRAINT "conversation" FOREIGN KEY("id_con") REFERENCES "Conversations"("id_con") ON DELETE CASCADE,
-						CONSTRAINT "sender" FOREIGN KEY("login") REFERENCES "Users"("login") ON DELETE CASCADE
-					);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
-		}
-	}
-
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Users';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE IF NOT EXISTS "Users" (
-						"login"	TEXT NOT NULL,
-						"token"	TEXT NOT NULL,
-						"username"	TEXT DEFAULT NULL,
-						"userphoto"	BLOB,
-						PRIMARY KEY("login")
-					);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
-		}
-	}
-
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Forwarded';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE IF NOT EXISTS "Forwarded" (
-						"id_msg_new"	INTEGER,
-						"id_msg_old"	INTEGER,
-						UNIQUE("id_msg_new","id_msg_old"),
-						CONSTRAINT "messagenew" FOREIGN KEY("id_msg_new") REFERENCES "Messages"("id_msg") ON DELETE CASCADE
-					);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
-		}
-	}
-
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='Replyed';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE IF NOT EXISTS "Replyed" (
-						"id_msg_new"	INTEGER,
-						"id_msg_old"	INTEGER,
-						UNIQUE("id_msg_new","id_msg_old"),
-						CONSTRAINT "messagenew" FOREIGN KEY("id_msg_new") REFERENCES "Messages"("id_msg") ON DELETE CASCADE
-					);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
-		}
-	}
-
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='UsersConversations';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE IF NOT EXISTS "UsersConversations" (
-						"login"	TEXT,
-						"id_con"	INTEGER,
-						UNIQUE("login","id_con"),
-						CONSTRAINT "conversation" FOREIGN KEY("id_con") REFERENCES "Conversations"("id_con") ON DELETE CASCADE,
-						CONSTRAINT "user" FOREIGN KEY("login") REFERENCES "Users"("login") ON DELETE CASCADE
-					);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
-		}
-	}
-
-	err = db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='UsersMessages';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE IF NOT EXISTS "UsersMessages" (
-						"login"	TEXT,
-						"id_msg"	INTEGER,
-						"received"	BOOLEAN,
-						"read"	BOOLEAN,
-						UNIQUE("login","id_msg"),
-						CONSTRAINT "message" FOREIGN KEY("id_msg") REFERENCES "Messages"("id_msg") ON DELETE CASCADE,
-						CONSTRAINT "user" FOREIGN KEY("login") REFERENCES "Users"("login") ON DELETE CASCADE
-					);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore durante la creazione della struttura del database: %w", err)
-		}
+	// 2. Crea le tabelle se non esistono
+	if err := createTables(db); err != nil {
+		return nil, fmt.Errorf("errore durante la creazione delle tabelle: %w", err)
 	}
 
 	return &appdbimpl{
@@ -224,4 +94,121 @@ func New(db *sql.DB) (AppDatabase, error) {
 
 func (db *appdbimpl) Ping() error {
 	return db.c.Ping()
+}
+
+// createTables contiene le query per creare la struttura del database
+func createTables(db *sql.DB) error {
+	
+	// Tabella Users
+	queryUsers := `CREATE TABLE IF NOT EXISTS "Users" (
+		"login"	TEXT NOT NULL,
+		"token"	TEXT NOT NULL,
+		"username"	TEXT DEFAULT NULL,
+		"userphoto"	BLOB,
+		PRIMARY KEY("login")
+	);`
+	if _, err := db.Exec(queryUsers); err != nil {
+		return err
+	}
+
+	// Tabella Conversations
+	queryConversations := `CREATE TABLE IF NOT EXISTS "Conversations" (
+		"id_con"	INTEGER NOT NULL,
+		"category"	TEXT NOT NULL,
+		"name"	TEXT NOT NULL DEFAULT 'conversation',
+		"photo"	BLOB,
+		PRIMARY KEY("id_con" AUTOINCREMENT)
+	);`
+	if _, err := db.Exec(queryConversations); err != nil {
+		return err
+	}
+
+	// Conversazione Default (0)
+	// Usa INSERT OR IGNORE per non dare errore se esiste già
+	queryInsertConv := `INSERT OR IGNORE INTO Conversations (id_con, category, name, photo) VALUES(0,'conversation', '', NULL);`
+	if _, err := db.Exec(queryInsertConv); err != nil {
+		return fmt.Errorf("errore init conversazione default: %w", err)
+	}
+
+	// Tabella Messages
+	queryMessages := `CREATE TABLE IF NOT EXISTS "Messages" (
+		"id_msg"	INTEGER NOT NULL,
+		"id_con"	INTEGER,
+		"login"	TEXT,
+		"timestamp"	DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		"text"	TEXT,
+		"photo" BLOB,
+		"category"  TEXT NOT NULL DEFAULT "text",
+		PRIMARY KEY("id_msg" AUTOINCREMENT),
+		CONSTRAINT "conversation" FOREIGN KEY("id_con") REFERENCES "Conversations"("id_con") ON DELETE CASCADE,
+		CONSTRAINT "sender" FOREIGN KEY("login") REFERENCES "Users"("login") ON DELETE CASCADE
+	);`
+	if _, err := db.Exec(queryMessages); err != nil {
+		return err
+	}
+
+	// Tabella Comments
+	queryComments := `CREATE TABLE IF NOT EXISTS "Comments" (
+		"id_com"	INTEGER NOT NULL,
+		"id_msg"	INTEGER NOT NULL,
+		"login"	TEXT NOT NULL,
+		"emoji"	TEXT NOT NULL,
+		PRIMARY KEY("id_com" AUTOINCREMENT),
+		CONSTRAINT "message" FOREIGN KEY("id_msg") REFERENCES "Messages"("id_msg") ON DELETE CASCADE,
+		CONSTRAINT "user" FOREIGN KEY("login") REFERENCES "Users"("login") ON DELETE CASCADE,
+		CONSTRAINT "comment" UNIQUE("id_msg", "login")
+	);`
+	if _, err := db.Exec(queryComments); err != nil {
+		return err
+	}
+
+	// Tabella Forwarded
+	queryForwarded := `CREATE TABLE IF NOT EXISTS "Forwarded" (
+		"id_msg_new"	INTEGER,
+		"id_msg_old"	INTEGER,
+		UNIQUE("id_msg_new","id_msg_old"),
+		CONSTRAINT "messagenew" FOREIGN KEY("id_msg_new") REFERENCES "Messages"("id_msg") ON DELETE CASCADE
+	);`
+	if _, err := db.Exec(queryForwarded); err != nil {
+		return err
+	}
+
+	// Tabella Replyed
+	queryReplyed := `CREATE TABLE IF NOT EXISTS "Replyed" (
+		"id_msg_new"	INTEGER,
+		"id_msg_old"	INTEGER,
+		UNIQUE("id_msg_new","id_msg_old"),
+		CONSTRAINT "messagenew" FOREIGN KEY("id_msg_new") REFERENCES "Messages"("id_msg") ON DELETE CASCADE
+	);`
+	if _, err := db.Exec(queryReplyed); err != nil {
+		return err
+	}
+
+	// Tabella UsersConversations
+	queryUsersConv := `CREATE TABLE IF NOT EXISTS "UsersConversations" (
+		"login"	TEXT,
+		"id_con"	INTEGER,
+		UNIQUE("login","id_con"),
+		CONSTRAINT "conversation" FOREIGN KEY("id_con") REFERENCES "Conversations"("id_con") ON DELETE CASCADE,
+		CONSTRAINT "user" FOREIGN KEY("login") REFERENCES "Users"("login") ON DELETE CASCADE
+	);`
+	if _, err := db.Exec(queryUsersConv); err != nil {
+		return err
+	}
+
+	// Tabella UsersMessages
+	queryUsersMsg := `CREATE TABLE IF NOT EXISTS "UsersMessages" (
+		"login"	TEXT,
+		"id_msg"	INTEGER,
+		"received"	BOOLEAN,
+		"read"	BOOLEAN,
+		UNIQUE("login","id_msg"),
+		CONSTRAINT "message" FOREIGN KEY("id_msg") REFERENCES "Messages"("id_msg") ON DELETE CASCADE,
+		CONSTRAINT "user" FOREIGN KEY("login") REFERENCES "Users"("login") ON DELETE CASCADE
+	);`
+	if _, err := db.Exec(queryUsersMsg); err != nil {
+		return err
+	}
+
+	return nil
 }
