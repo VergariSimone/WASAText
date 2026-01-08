@@ -1,7 +1,7 @@
 # Building `sys/unix`
 
 The sys/unix package provides access to the raw system call interface of the
-underlying operating system. See: https://godoc.org/golang.org/x/sys/unix
+underlying operating system. See: https:// godoc.org/golang.org/x/sys/unix
 
 Porting Go to a new architecture/OS combination or adding syscalls, types, or
 constants to an existing architecture/OS pair requires some manual effort;
@@ -97,17 +97,17 @@ parsing in mksysnum.
 The `syscall.go`, `syscall_${GOOS}.go`, `syscall_${GOOS}_${GOARCH}.go` are
 hand-written Go files which implement system calls (for unix, the specific OS,
 or the specific OS/Architecture pair respectively) that need special handling
-and list `//sys` comments giving prototypes for ones that can be generated.
+and list `// sys` comments giving prototypes for ones that can be generated.
 
-The mksyscall.go program takes the `//sys` and `//sysnb` comments and converts
+The mksyscall.go program takes the `// sys` and `// sysnb` comments and converts
 them into syscalls. This requires the name of the prototype in the comment to
 match a syscall number in the `zsysnum_${GOOS}_${GOARCH}.go` file. The function
 prototype can be exported (capitalized) or not.
 
-Adding a new syscall often just requires adding a new `//sys` function prototype
+Adding a new syscall often just requires adding a new `// sys` function prototype
 with the desired arguments and a capitalized name so it is exported. However, if
 you want the interface to the syscall to be different, often one will make an
-unexported `//sys` prototype, and then write a custom wrapper in
+unexported `// sys` prototype, and then write a custom wrapper in
 `syscall_${GOOS}.go`.
 
 ### types files

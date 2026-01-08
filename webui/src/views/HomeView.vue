@@ -18,44 +18,44 @@
 			const $axios = proxy.$axios;
 			const router = useRouter();
 	
-			// riferimenti componenti figli
+			//  riferimenti componenti figli
 			const conversationRef = ref(null);
 			const vueConversationMenu = ref(null);
 			const vueGroupMenu = ref(null);
 	
-			// stato
+			//  stato
 			const sv = reactive({ start: 0, limit: 50, last: null });
 			
-			// modali
+			//  modali
 			const showInfo = ref(false);
 			const showUserGroup = ref(false); 
 			const showList = ref(false);    
 	
-			// dati di accesso
+			//  dati di accesso
 			const token = ref(null);
 			const login = ref(null);
 			const loading = ref(false);
 			const errormsg = ref(null);
 			
-			// selezioni
+			//  selezioni
 			const selectedconvs = ref(null);
-			const searchSelectedConv = ref(null); // ID conversazione per operazioni 
+			const searchSelectedConv = ref(null); //  ID conversazione per operazioni 
 			
-			// liste di dati
+			//  liste di dati
 			const usersGroups = ref([]);    
-			const selectedusers = ref([]);  // ris ricerca utenti
-			const convs = reactive({ items: [] }); // lista conversazioni sidebar
+			const selectedusers = ref([]);  //  ris ricerca utenti
+			const convs = reactive({ items: [] }); //  lista conversazioni sidebar
 	
-			// pannello info
+			//  pannello info
 			const ievent = ref(null);
 			const itype = ref(null);
 	
-			// utilities
+			//  utilities
 			const refreshInterval = ref(null);
 			const topX = ref(0);
 			const topY = ref(0);
 	
-			// opzioni menu
+			//  opzioni menu
 			const optionsconversation = [
 				{ name: 'Apri', slug: 'open' },
 				{ type: 'divider' },
@@ -72,7 +72,7 @@
 			];
 	
 	
-			// posizionamento popup 
+			//  posizionamento popup 
 			const calcPosition = (element) => {
 				if(!element) return [0,0];
 				var html = document.documentElement;
@@ -90,20 +90,20 @@
 				return false;
 			};
 	
-			// timestamp
+			//  timestamp
 			const convertTimestamp = (timestamp) => {
 				if(!timestamp) return "";
 				const localDate = new Date(`${timestamp}Z`);
 				return localDate.toLocaleString("it-IT", { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 			};
 	
-			// da leggere
+			//  da leggere
 			const resetToread = (conid) => {
 				let cvs = convs.items.find(c => c.conid == conid);
 				if (cvs) cvs.toread = 0;
 			};
 	
-			// messaggi conv specifica
+			//  messaggi conv specifica
 			const choose = async (conid) => {
 				resetToread(conid);
 				errormsg.value = null;
@@ -118,7 +118,7 @@
 				} catch (e) { errormsg.value = e.toString(); }
 			};
 	
-			// ricerca lista conversazioni sidebar 
+			//  ricerca lista conversazioni sidebar 
 			const refresh = async (chooseFlag = true) => {
 				loading.value = true;
 				token.value = sessionStorage.getItem('token');
@@ -132,12 +132,12 @@
 					convs.items = response.data;
 				} catch (e) { errormsg.value = e.toString(); }
 	
-				// if ce una conv selezionata, ricaricala per vedere nuovi messaggi
+				//  if ce una conv selezionata, ricaricala per vedere nuovi messaggi
 				if (selectedconvs.value) {
 					if (isPresent(selectedconvs.value.conid, convs)) {
-						// tiene la selezione 
+						//  tiene la selezione 
 					} else if (convs.items.length > 0 && !selectedconvs.value) {
-						// seleziona la prima se nulla è selezioanto
+						//  seleziona la prima se nulla è selezioanto
 						selectedconvs.value = convs.items[0];
 						choose(convs.items[0].conid);
 					}
@@ -148,7 +148,7 @@
 			const listNext = () => { sv.start += sv.limit; choose(sv.last); };
 			const listPrevious = () => { sv.start = Math.max(sv.start - sv.limit, 0); choose(sv.last); };
 	
-			// aggiunta utente a gruppo esistente
+			//  aggiunta utente a gruppo esistente
 			const addSelectedUsers = async (users) => {
 				showList.value = false;
 				var out = [];
@@ -173,7 +173,7 @@
 				topY.value = e.clientY;
 			};
 	
-			// ricerca utenti 
+			//  ricerca utenti 
 			const searchUsersAPI = async (search = "") => {
 				let config = { headers: { Authorization: "Bearer " + token.value } };
 				let response = await $axios.get(`/users?search=${search}`, config);
@@ -200,7 +200,7 @@
 				usersGroups.value = Array.isArray(users) ? users : [users];
 			};
 	
-			// gestione del click per menu 
+			//  gestione del click per menu 
 			const optionClicked = (event) => {
 				const slug = event.option.slug;
 				const item = event.item;
@@ -228,7 +228,7 @@
 			};
 	
 			const handleClick = (evt, conv) => {
-				//  menu diverso se gruppo o user
+				//   menu diverso se gruppo o user
 				if (conv.categoryinfo == 'conversation') {
 					if(vueGroupMenu.value) vueGroupMenu.value.hideContextMenu();
 					if(vueConversationMenu.value) vueConversationMenu.value.showMenu(evt, conv);
@@ -238,7 +238,7 @@
 				}
 			};
 	
-			// pannello info
+			//  pannello info
 			const reloadInfo = async (infoType, conid) => {
 				let config = { headers: { Authorization: "Bearer " + token.value } };
 				if (itype.value == 'group') {
@@ -270,7 +270,7 @@
 			
 			const changeSelectedConv = (newconv) => {
 				selectedconvs.value = newconv;
-				refresh(false); // aggiorna sidebar per muovere la chat in alto
+				refresh(false); //  aggiorna sidebar per muovere la chat in alto
 			};
 	
 			const changeSelectedConvByid = async (newconvid) => {
@@ -278,7 +278,7 @@
 				choose(newconvid);
 			};
 	
-			// lifecycle
+			//  lifecycle
 			onMounted(() => {
 				refresh();
 				if (refreshInterval.value === null) {
@@ -291,13 +291,13 @@
 			});
 	
 			return {
-				// refs
+				//  refs
 				conversationRef, vueConversationMenu, vueGroupMenu,
-				// state
+				//  state
 				sv, showInfo, showUserGroup, usersGroups, ievent, itype, errormsg, token, login,
 				showList, selectedconvs, searchSelectedConv, selectedusers, convs,
 				optionsconversation, optionsgroup,
-				// Metodi
+				//  Metodi
 				listNext, listPrevious, addSelectedUsers, leaveGroup, 
 				usersSearchAgain, usersSearch, usersGroupSearch,
 				optionClicked, handleClick, info, reloadInfo, classNumberToRead,

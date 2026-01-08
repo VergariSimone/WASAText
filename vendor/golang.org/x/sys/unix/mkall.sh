@@ -27,7 +27,7 @@ case "$1" in
 	do
 		# Run the command line that appears in the first line
 		# of the generated file to regenerate it.
-		sed 1q $i | sed 's;^// ;;' | sh > _$i && gofmt < _$i > $i
+		sed 1q $i | sed 's;^//  ;;' | sh > _$i && gofmt < _$i > $i
 		rm _$i
 	done
 	exit 0
@@ -83,54 +83,54 @@ darwin_arm64)
 dragonfly_amd64)
 	mkerrors="$mkerrors -m64"
 	mksyscall="go run mksyscall.go -dragonfly"
-	mksysnum="go run mksysnum.go 'https://gitweb.dragonflybsd.org/dragonfly.git/blob_plain/HEAD:/sys/kern/syscalls.master'"
+	mksysnum="go run mksysnum.go 'https:// gitweb.dragonflybsd.org/dragonfly.git/blob_plain/HEAD:/sys/kern/syscalls.master'"
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
 	;;
 freebsd_386)
 	mkerrors="$mkerrors -m32"
 	mksyscall="go run mksyscall.go -l32"
-	mksysnum="go run mksysnum.go 'https://cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
+	mksysnum="go run mksysnum.go 'https:// cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
 	;;
 freebsd_amd64)
 	mkerrors="$mkerrors -m64"
-	mksysnum="go run mksysnum.go 'https://cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
+	mksysnum="go run mksysnum.go 'https:// cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
 	;;
 freebsd_arm)
 	mkerrors="$mkerrors"
 	mksyscall="go run mksyscall.go -l32 -arm"
-	mksysnum="go run mksysnum.go 'https://cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
+	mksysnum="go run mksysnum.go 'https:// cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
 	# Let the type of C char be signed for making the bare syscall
 	# API consistent across platforms.
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs -- -fsigned-char"
 	;;
 freebsd_arm64)
 	mkerrors="$mkerrors -m64"
-	mksysnum="go run mksysnum.go 'https://cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
+	mksysnum="go run mksysnum.go 'https:// cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs -- -fsigned-char"
 	;;
 freebsd_riscv64)
 	mkerrors="$mkerrors -m64"
-	mksysnum="go run mksysnum.go 'https://cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
+	mksysnum="go run mksysnum.go 'https:// cgit.freebsd.org/src/plain/sys/kern/syscalls.master?h=stable/12'"
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs -- -fsigned-char"
 	;;
 netbsd_386)
 	mkerrors="$mkerrors -m32"
 	mksyscall="go run mksyscall.go -l32 -netbsd"
-	mksysnum="go run mksysnum.go 'http://cvsweb.netbsd.org/bsdweb.cgi/~checkout~/src/sys/kern/syscalls.master'"
+	mksysnum="go run mksysnum.go 'http:// cvsweb.netbsd.org/bsdweb.cgi/~checkout~/src/sys/kern/syscalls.master'"
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
 	;;
 netbsd_amd64)
 	mkerrors="$mkerrors -m64"
 	mksyscall="go run mksyscall.go -netbsd"
-	mksysnum="go run mksysnum.go 'http://cvsweb.netbsd.org/bsdweb.cgi/~checkout~/src/sys/kern/syscalls.master'"
+	mksysnum="go run mksysnum.go 'http:// cvsweb.netbsd.org/bsdweb.cgi/~checkout~/src/sys/kern/syscalls.master'"
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
 	;;
 netbsd_arm)
 	mkerrors="$mkerrors"
 	mksyscall="go run mksyscall.go -l32 -netbsd -arm"
-	mksysnum="go run mksysnum.go 'http://cvsweb.netbsd.org/bsdweb.cgi/~checkout~/src/sys/kern/syscalls.master'"
+	mksysnum="go run mksysnum.go 'http:// cvsweb.netbsd.org/bsdweb.cgi/~checkout~/src/sys/kern/syscalls.master'"
 	# Let the type of C char be signed for making the bare syscall
 	# API consistent across platforms.
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs -- -fsigned-char"
@@ -138,7 +138,7 @@ netbsd_arm)
 netbsd_arm64)
 	mkerrors="$mkerrors -m64"
 	mksyscall="go run mksyscall.go -netbsd"
-	mksysnum="go run mksysnum.go 'http://cvsweb.netbsd.org/bsdweb.cgi/~checkout~/src/sys/kern/syscalls.master'"
+	mksysnum="go run mksysnum.go 'http:// cvsweb.netbsd.org/bsdweb.cgi/~checkout~/src/sys/kern/syscalls.master'"
 	mktypes="GOARCH=$GOARCH go tool cgo -godefs"
 	;;
 openbsd_386)

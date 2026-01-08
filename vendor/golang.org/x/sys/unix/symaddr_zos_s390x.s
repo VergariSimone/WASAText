@@ -1,12 +1,12 @@
-// Copyright 2024 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+//  Copyright 2024 The Go Authors. All rights reserved.
+//  Use of this source code is governed by a BSD-style
+//  license that can be found in the LICENSE file.
 
-//go:build zos && s390x && gc
+// go:build zos && s390x && gc
 
 #include "textflag.h"
 
-//  provide the address of function variable to be fixed up.
+//   provide the address of function variable to be fixed up.
 
 TEXT ·getPipe2Addr(SB), NOSPLIT|NOFRAME, $0-8
 	MOVD $·Pipe2(SB), R8

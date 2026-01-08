@@ -86,7 +86,7 @@ includes_Darwin='
 #include <netinet/ip.h>
 #include <termios.h>
 
-// for backwards compatibility because moved TIOCREMOTE to Kernel.framework after MacOSX12.0.sdk.
+//  for backwards compatibility because moved TIOCREMOTE to Kernel.framework after MacOSX12.0.sdk.
 #define TIOCREMOTE 0x80047469
 '
 
@@ -142,11 +142,11 @@ includes_FreeBSD='
 #include <sys/extattr.h>
 
 #if __FreeBSD__ >= 10
-#define IFT_CARP	0xf8	// IFT_CARP is deprecated in FreeBSD 10
+#define IFT_CARP	0xf8	//  IFT_CARP is deprecated in FreeBSD 10
 #undef SIOCAIFADDR
-#define SIOCAIFADDR	_IOW(105, 26, struct oifaliasreq)	// ifaliasreq contains if_data
+#define SIOCAIFADDR	_IOW(105, 26, struct oifaliasreq)	//  ifaliasreq contains if_data
 #undef SIOCSIFPHYADDR
-#define SIOCSIFPHYADDR	_IOW(105, 70, struct oifaliasreq)	// ifaliasreq contains if_data
+#define SIOCSIFPHYADDR	_IOW(105, 70, struct oifaliasreq)	//  ifaliasreq contains if_data
 #endif
 '
 
@@ -158,8 +158,8 @@ includes_Linux='
 #endif
 #define _GNU_SOURCE
 
-// <sys/ioctl.h> is broken on powerpc64, as it fails to include definitions of
-// these structures. We just include them copied from <bits/termios.h>.
+//  <sys/ioctl.h> is broken on powerpc64, as it fails to include definitions of
+//  these structures. We just include them copied from <bits/termios.h>.
 #if defined(__powerpc__)
 struct sgttyb {
         char    sg_ispeed;
@@ -278,9 +278,9 @@ struct ltchars {
 #include <net/route.h>
 
 #if defined(__sparc__)
-// On sparc{,64}, the kernel defines struct termios2 itself which clashes with the
-// definition in glibc. As only the error constants are needed here, include the
-// generic termibits.h (which is included by termbits.h on sparc).
+//  On sparc{,64}, the kernel defines struct termios2 itself which clashes with the
+//  definition in glibc. As only the error constants are needed here, include the
+//  generic termibits.h (which is included by termbits.h on sparc).
 #include <asm-generic/termbits.h>
 #else
 #include <asm/termbits.h>
@@ -295,24 +295,24 @@ struct ltchars {
 #endif
 
 #ifdef SOL_BLUETOOTH
-// SPARC includes this in /usr/include/sparc64-linux-gnu/bits/socket.h
-// but it is already in bluetooth_linux.go
+//  SPARC includes this in /usr/include/sparc64-linux-gnu/bits/socket.h
+//  but it is already in bluetooth_linux.go
 #undef SOL_BLUETOOTH
 #endif
 
-// Certain constants are missing from the fs/crypto UAPI
+//  Certain constants are missing from the fs/crypto UAPI
 #define FS_KEY_DESC_PREFIX              "fscrypt:"
 #define FS_KEY_DESC_PREFIX_SIZE         8
 #define FS_MAX_KEY_SIZE                 64
 
-// The code generator produces -0x1 for (~0), but an unsigned value is necessary
-// for the tipc_subscr timeout __u32 field.
+//  The code generator produces -0x1 for (~0), but an unsigned value is necessary
+//  for the tipc_subscr timeout __u32 field.
 #undef TIPC_WAIT_FOREVER
 #define TIPC_WAIT_FOREVER 0xffffffff
 
-// Copied from linux/netfilter/nf_nat.h
-// Including linux/netfilter/nf_nat.h here causes conflicts between linux/in.h
-// and netinet/in.h.
+//  Copied from linux/netfilter/nf_nat.h
+//  Including linux/netfilter/nf_nat.h here causes conflicts between linux/in.h
+//  and netinet/in.h.
 #define NF_NAT_RANGE_MAP_IPS			(1 << 0)
 #define NF_NAT_RANGE_PROTO_SPECIFIED		(1 << 1)
 #define NF_NAT_RANGE_PROTO_RANDOM		(1 << 2)
@@ -328,11 +328,11 @@ struct ltchars {
 	 NF_NAT_RANGE_PROTO_RANDOM_FULLY | NF_NAT_RANGE_PROTO_OFFSET | \
 	 NF_NAT_RANGE_NETMAP)
 
-// Copied from linux/hid.h.
-// Keep in sync with the size of the referenced fields.
-#define _HIDIOCGRAWNAME_LEN	128 // sizeof_field(struct hid_device, name)
-#define _HIDIOCGRAWPHYS_LEN	64  // sizeof_field(struct hid_device, phys)
-#define _HIDIOCGRAWUNIQ_LEN	64  // sizeof_field(struct hid_device, uniq)
+//  Copied from linux/hid.h.
+//  Keep in sync with the size of the referenced fields.
+#define _HIDIOCGRAWNAME_LEN	128 //  sizeof_field(struct hid_device, name)
+#define _HIDIOCGRAWPHYS_LEN	64  //  sizeof_field(struct hid_device, phys)
+#define _HIDIOCGRAWUNIQ_LEN	64  //  sizeof_field(struct hid_device, uniq)
 
 #define _HIDIOCGRAWNAME		HIDIOCGRAWNAME(_HIDIOCGRAWNAME_LEN)
 #define _HIDIOCGRAWPHYS		HIDIOCGRAWPHYS(_HIDIOCGRAWPHYS_LEN)
@@ -365,7 +365,7 @@ includes_NetBSD='
 #include <netinet/ip_mroute.h>
 #include <netinet/if_ether.h>
 
-// Needed since <sys/param.h> refers to it...
+//  Needed since <sys/param.h> refers to it...
 #define schedppq 1
 '
 
@@ -397,8 +397,8 @@ includes_OpenBSD='
 #include <netinet/if_ether.h>
 #include <net/if_bridge.h>
 
-// We keep some constants not supported in OpenBSD 5.5 and beyond for
-// the promise of compatibility.
+//  We keep some constants not supported in OpenBSD 5.5 and beyond for
+//  the promise of compatibility.
 #define EMUL_ENABLED		0x1
 #define EMUL_NATIVE		0x2
 #define IPV6_FAITH		0x1d
@@ -669,21 +669,21 @@ echo '#include <signal.h>' | $CC -x c - -E -dM $ccflags |
 	grep -v 'SIGSTKSIZE\|SIGSTKSZ\|SIGRT\|SIGMAX64' |
 	sort >_signal.grep
 
-echo '// mkerrors.sh' "$@"
-echo '// Code generated by the command above; see README.md. DO NOT EDIT.'
+echo '//  mkerrors.sh' "$@"
+echo '//  Code generated by the command above; see README.md. DO NOT EDIT.'
 echo
-echo "//go:build ${GOARCH} && ${GOOS}"
+echo "// go:build ${GOARCH} && ${GOOS}"
 echo
 go tool cgo -godefs -- "$@" _const.go >_error.out
 cat _error.out | grep -vf _error.grep | grep -vf _signal.grep
 echo
-echo '// Errors'
+echo '//  Errors'
 echo 'const ('
 cat _error.out | grep -f _error.grep | sed 's/=\(.*\)/= syscall.Errno(\1)/'
 echo ')'
 
 echo
-echo '// Signals'
+echo '//  Signals'
 echo 'const ('
 cat _error.out | grep -f _signal.grep | sed 's/=\(.*\)/= syscall.Signal(\1)/'
 echo ')'
@@ -700,7 +700,7 @@ echo ')'
 
 #define nelem(x) (sizeof(x)/sizeof((x)[0]))
 
-enum { A = 'A', Z = 'Z', a = 'a', z = 'z' }; // avoid need for single quotes below
+enum { A = 'A', Z = 'Z', a = 'a', z = 'z' }; //  avoid need for single quotes below
 
 struct tuple {
 	int num;
@@ -740,7 +740,7 @@ main(void)
 	int i, e;
 	char buf[1024], *p;
 
-	printf("\n\n// Error table\n");
+	printf("\n\n//  Error table\n");
 	printf("var errorList = [...]struct {\n");
 	printf("\tnum  syscall.Errno\n");
 	printf("\tname string\n");
@@ -753,14 +753,14 @@ main(void)
 			continue;
 		strncpy(buf, strerror(e), sizeof(buf) - 1);
 		buf[sizeof(buf) - 1] = '\0';
-		// lowercase first letter: Bad -> bad, but STREAM -> STREAM.
+		//  lowercase first letter: Bad -> bad, but STREAM -> STREAM.
 		if(A <= buf[0] && buf[0] <= Z && a <= buf[1] && buf[1] <= z)
 			buf[0] += a - A;
 		printf("\t{ %d, \"%s\", \"%s\" },\n", e, errors[i].name, buf);
 	}
 	printf("}\n\n");
 
-	printf("\n\n// Signal table\n");
+	printf("\n\n//  Signal table\n");
 	printf("var signalList = [...]struct {\n");
 	printf("\tnum  syscall.Signal\n");
 	printf("\tname string\n");
@@ -773,10 +773,10 @@ main(void)
 			continue;
 		strncpy(buf, strsignal(e), sizeof(buf) - 1);
 		buf[sizeof(buf) - 1] = '\0';
-		// lowercase first letter: Bad -> bad, but STREAM -> STREAM.
+		//  lowercase first letter: Bad -> bad, but STREAM -> STREAM.
 		if(A <= buf[0] && buf[0] <= Z && a <= buf[1] && buf[1] <= z)
 			buf[0] += a - A;
-		// cut trailing : number.
+		//  cut trailing : number.
 		p = strrchr(buf, ":"[0]);
 		if(p)
 			*p = '\0';

@@ -1,17 +1,17 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+//  Copyright 2015 The Go Authors. All rights reserved.
+//  Use of this source code is governed by a BSD-style
+//  license that can be found in the LICENSE file.
 
-//go:build linux && (mips64 || mips64le) && gc
+// go:build linux && (mips64 || mips64le) && gc
 
 #include "textflag.h"
 
-//
-// System calls for mips64, Linux
-//
+// 
+//  System calls for mips64, Linux
+// 
 
-// Just jump to package syscall's implementation for all these functions.
-// The runtime may know about them.
+//  Just jump to package syscall's implementation for all these functions.
+//  The runtime may know about them.
 
 TEXT ·Syscall(SB),NOSPLIT,$0-56
 	JMP	syscall·Syscall(SB)
@@ -27,7 +27,7 @@ TEXT ·SyscallNoError(SB),NOSPLIT,$0-48
 	MOVV	R0, R7
 	MOVV	R0, R8
 	MOVV	R0, R9
-	MOVV	trap+0(FP), R2	// syscall entry
+	MOVV	trap+0(FP), R2	//  syscall entry
 	SYSCALL
 	MOVV	R2, r1+32(FP)
 	MOVV	R3, r2+40(FP)
@@ -47,7 +47,7 @@ TEXT ·RawSyscallNoError(SB),NOSPLIT,$0-48
 	MOVV	R0, R7
 	MOVV	R0, R8
 	MOVV	R0, R9
-	MOVV	trap+0(FP), R2	// syscall entry
+	MOVV	trap+0(FP), R2	//  syscall entry
 	SYSCALL
 	MOVV	R2, r1+32(FP)
 	MOVV	R3, r2+40(FP)

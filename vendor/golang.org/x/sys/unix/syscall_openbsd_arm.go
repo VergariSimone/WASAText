@@ -1,8 +1,8 @@
-// Copyright 2017 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+//  Copyright 2017 The Go Authors. All rights reserved.
+//  Use of this source code is governed by a BSD-style
+//  license that can be found in the LICENSE file.
 
-//go:build arm && openbsd
+// go:build arm && openbsd
 
 package unix
 
@@ -36,6 +36,6 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 	cmsg.Len = uint32(length)
 }
 
-// SYS___SYSCTL is used by syscall_bsd.go for all BSDs, but in modern versions
-// of openbsd/arm the syscall is called sysctl instead of __sysctl.
+//  SYS___SYSCTL is used by syscall_bsd.go for all BSDs, but in modern versions
+//  of openbsd/arm the syscall is called sysctl instead of __sysctl.
 const SYS___SYSCTL = SYS_SYSCTL

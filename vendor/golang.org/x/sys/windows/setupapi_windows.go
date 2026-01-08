@@ -1,6 +1,6 @@
-// Copyright 2021 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+//  Copyright 2021 The Go Authors. All rights reserved.
+//  Use of this source code is governed by a BSD-style
+//  license that can be found in the LICENSE file.
 
 package windows
 
@@ -14,11 +14,11 @@ import (
 	"unsafe"
 )
 
-// This file contains functions that wrap SetupAPI.dll and CfgMgr32.dll,
-// core system functions for managing hardware devices, drivers, and the PnP tree.
-// Information about these APIs can be found at:
-//     https://docs.microsoft.com/en-us/windows-hardware/drivers/install/setupapi
-//     https://docs.microsoft.com/en-us/windows/win32/devinst/cfgmgr32-
+//  This file contains functions that wrap SetupAPI.dll and CfgMgr32.dll,
+//  core system functions for managing hardware devices, drivers, and the PnP tree.
+//  Information about these APIs can be found at:
+//      https:// docs.microsoft.com/en-us/windows-hardware/drivers/install/setupapi
+//      https:// docs.microsoft.com/en-us/windows/win32/devinst/cfgmgr32-
 
 const (
 	ERROR_EXPECTED_SECTION_NAME                  Errno = 0x20000000 | 0xC0000000 | 0
@@ -116,7 +116,7 @@ const (
 const (
 	MAX_DEVICE_ID_LEN   = 200
 	MAX_DEVNODE_ID_LEN  = MAX_DEVICE_ID_LEN
-	MAX_GUID_STRING_LEN = 39 // 38 chars + terminator null
+	MAX_GUID_STRING_LEN = 39 //  38 chars + terminator null
 	MAX_CLASS_NAME_LEN  = 32
 	MAX_PROFILE_LEN     = 80
 	MAX_CONFIG_VALUE    = 9999
@@ -124,11 +124,11 @@ const (
 	CONFIGMG_VERSION    = 0x0400
 )
 
-// Maximum string length constants
+//  Maximum string length constants
 const (
-	LINE_LEN                    = 256  // Windows 9x-compatible maximum for displayable strings coming from a device INF.
-	MAX_INF_STRING_LENGTH       = 4096 // Actual maximum size of an INF string (including string substitutions).
-	MAX_INF_SECTION_NAME_LENGTH = 255  // For Windows 9x compatibility, INF section names should be constrained to 32 characters.
+	LINE_LEN                    = 256  //  Windows 9x-compatible maximum for displayable strings coming from a device INF.
+	MAX_INF_STRING_LENGTH       = 4096 //  Actual maximum size of an INF string (including string substitutions).
+	MAX_INF_SECTION_NAME_LENGTH = 255  //  For Windows 9x compatibility, INF section names should be constrained to 32 characters.
 	MAX_TITLE_LEN               = 60
 	MAX_INSTRUCTION_LEN         = 256
 	MAX_LABEL_LEN               = 30
@@ -137,20 +137,20 @@ const (
 )
 
 const (
-	// SP_MAX_MACHINENAME_LENGTH defines maximum length of a machine name in the format expected by ConfigMgr32 CM_Connect_Machine (i.e., "\\\\MachineName\0").
+	//  SP_MAX_MACHINENAME_LENGTH defines maximum length of a machine name in the format expected by ConfigMgr32 CM_Connect_Machine (i.e., "\\\\MachineName\0").
 	SP_MAX_MACHINENAME_LENGTH = MAX_PATH + 3
 )
 
-// HSPFILEQ is type for setup file queue
+//  HSPFILEQ is type for setup file queue
 type HSPFILEQ uintptr
 
-// DevInfo holds reference to device information set
+//  DevInfo holds reference to device information set
 type DevInfo Handle
 
-// DEVINST is a handle usually recognized by cfgmgr32 APIs
+//  DEVINST is a handle usually recognized by cfgmgr32 APIs
 type DEVINST uint32
 
-// DevInfoData is a device information structure (references a device instance that is a member of a device information set)
+//  DevInfoData is a device information structure (references a device instance that is a member of a device information set)
 type DevInfoData struct {
 	size      uint32
 	ClassGUID GUID

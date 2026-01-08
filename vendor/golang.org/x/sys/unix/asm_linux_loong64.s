@@ -1,14 +1,14 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+//  Copyright 2022 The Go Authors. All rights reserved.
+//  Use of this source code is governed by a BSD-style
+//  license that can be found in the LICENSE file.
 
-//go:build linux && loong64 && gc
+// go:build linux && loong64 && gc
 
 #include "textflag.h"
 
 
-// Just jump to package syscall's implementation for all these functions.
-// The runtime may know about them.
+//  Just jump to package syscall's implementation for all these functions.
+//  The runtime may know about them.
 
 TEXT ·Syscall(SB),NOSPLIT,$0-56
 	JMP	syscall·Syscall(SB)
@@ -24,10 +24,10 @@ TEXT ·SyscallNoError(SB),NOSPLIT,$0-48
 	MOVV	R0, R7
 	MOVV	R0, R8
 	MOVV	R0, R9
-	MOVV	trap+0(FP), R11	// syscall entry
+	MOVV	trap+0(FP), R11	//  syscall entry
 	SYSCALL
 	MOVV	R4, r1+32(FP)
-	MOVV	R0, r2+40(FP)	// r2 is not used. Always set to 0
+	MOVV	R0, r2+40(FP)	//  r2 is not used. Always set to 0
 	JAL	runtime·exitsyscall(SB)
 	RET
 
@@ -44,8 +44,8 @@ TEXT ·RawSyscallNoError(SB),NOSPLIT,$0-48
 	MOVV	R0, R7
 	MOVV	R0, R8
 	MOVV	R0, R9
-	MOVV	trap+0(FP), R11	// syscall entry
+	MOVV	trap+0(FP), R11	//  syscall entry
 	SYSCALL
 	MOVV	R4, r1+32(FP)
-	MOVV	R0, r2+40(FP)	// r2 is not used. Always set to 0
+	MOVV	R0, r2+40(FP)	//  r2 is not used. Always set to 0
 	RET

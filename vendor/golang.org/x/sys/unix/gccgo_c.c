@@ -1,8 +1,8 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+//  Copyright 2015 The Go Authors. All rights reserved.
+//  Use of this source code is governed by a BSD-style
+//  license that can be found in the LICENSE file.
 
-//go:build gccgo && !aix && !hurd
+// go:build gccgo && !aix && !hurd
 
 #include <errno.h>
 #include <stdint.h>
@@ -12,8 +12,8 @@
 #define _STRINGIFY_(x) _STRINGIFY2_(x)
 #define GOSYM_PREFIX _STRINGIFY_(__USER_LABEL_PREFIX__)
 
-// Call syscall from C code because the gccgo support for calling from
-// Go to C does not support varargs functions.
+//  Call syscall from C code because the gccgo support for calling from
+//  Go to C does not support varargs functions.
 
 struct ret {
 	uintptr_t r;

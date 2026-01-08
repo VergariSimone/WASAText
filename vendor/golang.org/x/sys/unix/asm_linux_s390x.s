@@ -1,17 +1,17 @@
-// Copyright 2016 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+//  Copyright 2016 The Go Authors. All rights reserved.
+//  Use of this source code is governed by a BSD-style
+//  license that can be found in the LICENSE file.
 
-//go:build linux && s390x && gc
+// go:build linux && s390x && gc
 
 #include "textflag.h"
 
-//
-// System calls for s390x, Linux
-//
+// 
+//  System calls for s390x, Linux
+// 
 
-// Just jump to package syscall's implementation for all these functions.
-// The runtime may know about them.
+//  Just jump to package syscall's implementation for all these functions.
+//  The runtime may know about them.
 
 TEXT ·Syscall(SB),NOSPLIT,$0-56
 	BR	syscall·Syscall(SB)
@@ -27,7 +27,7 @@ TEXT ·SyscallNoError(SB),NOSPLIT,$0-48
 	MOVD	$0, R5
 	MOVD	$0, R6
 	MOVD	$0, R7
-	MOVD	trap+0(FP), R1	// syscall entry
+	MOVD	trap+0(FP), R1	//  syscall entry
 	SYSCALL
 	MOVD	R2, r1+32(FP)
 	MOVD	R3, r2+40(FP)
@@ -47,7 +47,7 @@ TEXT ·RawSyscallNoError(SB),NOSPLIT,$0-48
 	MOVD	$0, R5
 	MOVD	$0, R6
 	MOVD	$0, R7
-	MOVD	trap+0(FP), R1	// syscall entry
+	MOVD	trap+0(FP), R1	//  syscall entry
 	SYSCALL
 	MOVD	R2, r1+32(FP)
 	MOVD	R3, r2+40(FP)
