@@ -14,7 +14,7 @@
                 showEmojiPicker: false,
                 showImageMessage: false, 
                 
-                //  lista di emoji
+                // lista di emoji
                 emojis: [
                     '😀', '😂', '😍', '🥺', '😎', '😭', '😡', '👍', '👎', '❤️', 
                     '🔥', '🎉', '👋', '🙏', '👀', '💩', '👻', '🤖', '💀', '🤡',
@@ -23,24 +23,24 @@
             }
         },
         methods: {
-            //  invio normale 
+            // invio normale 
             sendMessage() {
-                //  se non c'è testo e non c'è modale foto aperto, non fare nulla
+                // se non c'è testo e non c'è modale foto aperto, non fare nulla
                 if (!this.text.trim()) return;
     
-                //  emette solo testo 
+                // emette solo testo 
                 this.$emit('send-message', this.text, null);
                 
                 this.text = "";
                 this.showEmojiPicker = false;
                 
-                //  focus
+                // focus
                 this.$nextTick(() => {
                     if(this.$refs.msgInput) this.$refs.msgInput.focus();
                 });
             },
     
-            //  gestise emoji
+            // gestise emoji
             toggleEmoji() {
                 this.showImageMessage = false; 
                 this.showEmojiPicker = !this.showEmojiPicker;
@@ -53,26 +53,26 @@
                 });
             },
     
-            //  gestione modale foto
+            // gestione modale foto
             toggleImageMessage() {
-                this.showEmojiPicker = false; //  chiude emoji
+                this.showEmojiPicker = false; // chiude emoji
                 this.showImageMessage = !this.showImageMessage;
                 if (this.showImageMessage) {
-                    this.text = ""; //  pulizia testo
+                    this.text = ""; // pulizia testo
                 }
             },
     
-            //  callback che riceve i dati dal componente ImageMessage
+            // callback che riceve i dati dal componente ImageMessage
             onImageReady(img, caption) {
-                //  emette l'evento con immagine e testo
+                // emette l'evento con immagine e testo
                 this.$emit('send-message', caption, img);
                 
-                //  chiude e resetta
+                // chiude e resetta
                 this.showImageMessage = false;
                 this.text = "";
             },
     
-            //  gestione tastiera
+            // gestione tastiera
             onKeydown(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();

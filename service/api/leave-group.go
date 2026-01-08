@@ -47,7 +47,7 @@ func (rt *_router) isGroup(token string, conID int) bool {
 	return err == nil
 }
 
-// // FUNZIONE CHE EFFETTUA L'USCITA DAL GRUPPO
+// FUNZIONE CHE EFFETTUA L'USCITA DAL GRUPPO
 func (rt *_router) leaveGroupDB(token string, conID int) bool {
 	err := rt.db.LeaveGroup(token, conID)
 	return err == nil

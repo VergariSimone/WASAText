@@ -1,17 +1,17 @@
-//  Copyright 2009 The Go Authors. All rights reserved.
-//  Use of this source code is governed by a BSD-style
-//  license that can be found in the LICENSE file.
+// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
-// go:build gc
+//go:build gc
 
 #include "textflag.h"
 
-// 
-//  System calls for AMD64, Linux
-// 
+//
+// System calls for AMD64, Linux
+//
 
-//  Just jump to package syscall's implementation for all these functions.
-//  The runtime may know about them.
+// Just jump to package syscall's implementation for all these functions.
+// The runtime may know about them.
 
 TEXT ·Syscall(SB),NOSPLIT,$0-56
 	JMP	syscall·Syscall(SB)
@@ -27,7 +27,7 @@ TEXT ·SyscallNoError(SB),NOSPLIT,$0-48
 	MOVQ	$0, R10
 	MOVQ	$0, R8
 	MOVQ	$0, R9
-	MOVQ	trap+0(FP), AX	//  syscall entry
+	MOVQ	trap+0(FP), AX	// syscall entry
 	SYSCALL
 	MOVQ	AX, r1+32(FP)
 	MOVQ	DX, r2+40(FP)
@@ -47,7 +47,7 @@ TEXT ·RawSyscallNoError(SB),NOSPLIT,$0-48
 	MOVQ	$0, R10
 	MOVQ	$0, R8
 	MOVQ	$0, R9
-	MOVQ	trap+0(FP), AX	//  syscall entry
+	MOVQ	trap+0(FP), AX	// syscall entry
 	SYSCALL
 	MOVQ	AX, r1+32(FP)
 	MOVQ	DX, r2+40(FP)

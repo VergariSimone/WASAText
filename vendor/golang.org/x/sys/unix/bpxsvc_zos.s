@@ -1,46 +1,46 @@
-//  Copyright 2024 The Go Authors. All rights reserved.
-//  Use of this source code is governed by a BSD-style
-//  license that can be found in the LICENSE file.
+// Copyright 2024 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 #include "go_asm.h"
 #include "textflag.h"
 
-//  function to call USS assembly language services
-// 
-//  doc: https:// www.ibm.com/support/knowledgecenter/en/SSLTBW_3.1.0/com.ibm.zos.v3r1.bpxb100/bit64env.htm
-// 
-//    arg1 unsafe.Pointer array that ressembles an OS PLIST
-// 
-//    arg2 function offset as in
-//        doc: https:// www.ibm.com/support/knowledgecenter/en/SSLTBW_3.1.0/com.ibm.zos.v3r1.bpxb100/bpx2cr_List_of_offsets.htm
-// 
-//  func bpxcall(plist []unsafe.Pointer, bpx_offset int64)
+// function to call USS assembly language services
+//
+// doc: https://www.ibm.com/support/knowledgecenter/en/SSLTBW_3.1.0/com.ibm.zos.v3r1.bpxb100/bit64env.htm
+//
+//   arg1 unsafe.Pointer array that ressembles an OS PLIST
+//
+//   arg2 function offset as in
+//       doc: https://www.ibm.com/support/knowledgecenter/en/SSLTBW_3.1.0/com.ibm.zos.v3r1.bpxb100/bpx2cr_List_of_offsets.htm
+//
+// func bpxcall(plist []unsafe.Pointer, bpx_offset int64)
 
 TEXT ·bpxcall(SB), NOSPLIT|NOFRAME, $0
-	MOVD  plist_base+0(FP), R1  //  r1 points to plist
-	MOVD  bpx_offset+24(FP), R2 //  r2 offset to BPX vector table
-	MOVD  R14, R7               //  save r14
-	MOVD  R15, R8               //  save r15
+	MOVD  plist_base+0(FP), R1  // r1 points to plist
+	MOVD  bpx_offset+24(FP), R2 // r2 offset to BPX vector table
+	MOVD  R14, R7               // save r14
+	MOVD  R15, R8               // save r15
 	MOVWZ 16(R0), R9
 	MOVWZ 544(R9), R9
-	MOVWZ 24(R9), R9            //  call vector in r9
-	ADD   R2, R9                //  add offset to vector table
-	MOVWZ (R9), R9              //  r9 points to entry point
-	BYTE  $0x0D                 //  BL R14,R9 --> basr r14,r9
-	BYTE  $0xE9                 //  clobbers 0,1,14,15
-	MOVD  R8, R15               //  restore 15
-	JMP   R7                    //  return via saved return address
+	MOVWZ 24(R9), R9            // call vector in r9
+	ADD   R2, R9                // add offset to vector table
+	MOVWZ (R9), R9              // r9 points to entry point
+	BYTE  $0x0D                 // BL R14,R9 --> basr r14,r9
+	BYTE  $0xE9                 // clobbers 0,1,14,15
+	MOVD  R8, R15               // restore 15
+	JMP   R7                    // return via saved return address
 
-//    func A2e(arr [] byte)
-//    code page conversion from  819 to 1047
+//   func A2e(arr [] byte)
+//   code page conversion from  819 to 1047
 TEXT ·A2e(SB), NOSPLIT|NOFRAME, $0
-	MOVD arg_base+0(FP), R2                        //  pointer to arry of characters
-	MOVD arg_len+8(FP), R3                         //  count
+	MOVD arg_base+0(FP), R2                        // pointer to arry of characters
+	MOVD arg_len+8(FP), R3                         // count
 	XOR  R0, R0
 	XOR  R1, R1
-	BYTE $0xA7; BYTE $0x15; BYTE $0x00; BYTE $0x82 //  BRAS 1,(2+(256/2))
+	BYTE $0xA7; BYTE $0x15; BYTE $0x00; BYTE $0x82 // BRAS 1,(2+(256/2))
 
-	//  ASCII -> EBCDIC conversion table:
+	// ASCII -> EBCDIC conversion table:
 	BYTE $0x00; BYTE $0x01; BYTE $0x02; BYTE $0x03
 	BYTE $0x37; BYTE $0x2d; BYTE $0x2e; BYTE $0x2f
 	BYTE $0x16; BYTE $0x05; BYTE $0x15; BYTE $0x0b
@@ -107,20 +107,20 @@ TEXT ·A2e(SB), NOSPLIT|NOFRAME, $0
 	BYTE $0xdc; BYTE $0x8d; BYTE $0x8e; BYTE $0xdf
 
 retry:
-	WORD $0xB9931022 //  TROO 2,2,b'0001'
+	WORD $0xB9931022 // TROO 2,2,b'0001'
 	BVS  retry
 	RET
 
-//    func e2a(arr [] byte)
-//    code page conversion from  1047 to 819
+//   func e2a(arr [] byte)
+//   code page conversion from  1047 to 819
 TEXT ·E2a(SB), NOSPLIT|NOFRAME, $0
-	MOVD arg_base+0(FP), R2                        //  pointer to arry of characters
-	MOVD arg_len+8(FP), R3                         //  count
+	MOVD arg_base+0(FP), R2                        // pointer to arry of characters
+	MOVD arg_len+8(FP), R3                         // count
 	XOR  R0, R0
 	XOR  R1, R1
-	BYTE $0xA7; BYTE $0x15; BYTE $0x00; BYTE $0x82 //  BRAS 1,(2+(256/2))
+	BYTE $0xA7; BYTE $0x15; BYTE $0x00; BYTE $0x82 // BRAS 1,(2+(256/2))
 
-	//  EBCDIC -> ASCII conversion table:
+	// EBCDIC -> ASCII conversion table:
 	BYTE $0x00; BYTE $0x01; BYTE $0x02; BYTE $0x03
 	BYTE $0x9c; BYTE $0x09; BYTE $0x86; BYTE $0x7f
 	BYTE $0x97; BYTE $0x8d; BYTE $0x8e; BYTE $0x0b
@@ -187,6 +187,6 @@ TEXT ·E2a(SB), NOSPLIT|NOFRAME, $0
 	BYTE $0xdc; BYTE $0xd9; BYTE $0xda; BYTE $0x9f
 
 retry:
-	WORD $0xB9931022 //  TROO 2,2,b'0001'
+	WORD $0xB9931022 // TROO 2,2,b'0001'
 	BVS  retry
 	RET

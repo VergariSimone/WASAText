@@ -1,8 +1,8 @@
-// Copyright 2009 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+//Copyright 2009 The Go Authors. All rights reserved.
+//Use of this source code is governed by a BSD-style
+//license that can be found in the LICENSE file.
 
-// Windows system calls.
+//Windows system calls.
 
 package windows
 
@@ -26,13 +26,13 @@ const (
 	InvalidHandle = ^Handle(0)
 	InvalidHWND   = ^HWND(0)
 
-	// Flags for DefineDosDevice.
+	//Flags for DefineDosDevice.
 	DDD_EXACT_MATCH_ON_REMOVE = 0x00000004
 	DDD_NO_BROADCAST_SYSTEM   = 0x00000008
 	DDD_RAW_TARGET_PATH       = 0x00000001
 	DDD_REMOVE_DEFINITION     = 0x00000002
 
-	// Return values for GetDriveType.
+	//Return values for GetDriveType.
 	DRIVE_UNKNOWN     = 0
 	DRIVE_NO_ROOT_DIR = 1
 	DRIVE_REMOVABLE   = 2
@@ -41,7 +41,7 @@ const (
 	DRIVE_CDROM       = 5
 	DRIVE_RAMDISK     = 6
 
-	// File system flags from GetVolumeInformation and GetVolumeInformationByHandle.
+	//File system flags from GetVolumeInformation and GetVolumeInformationByHandle.
 	FILE_CASE_SENSITIVE_SEARCH        = 0x00000001
 	FILE_CASE_PRESERVED_NAMES         = 0x00000002
 	FILE_FILE_COMPRESSION             = 0x00000010
@@ -63,17 +63,17 @@ const (
 	FILE_VOLUME_IS_COMPRESSED         = 0x00008000
 	FILE_VOLUME_QUOTAS                = 0x00000020
 
-	// Flags for LockFileEx.
+	//Flags for LockFileEx.
 	LOCKFILE_FAIL_IMMEDIATELY = 0x00000001
 	LOCKFILE_EXCLUSIVE_LOCK   = 0x00000002
 
-	// Return value of SleepEx and other APC functions
+	//Return value of SleepEx and other APC functions
 	WAIT_IO_COMPLETION = 0x000000C0
 )
 
-// StringToUTF16 is deprecated. Use UTF16FromString instead.
-// If s contains a NUL byte this function panics instead of
-// returning an error.
+//StringToUTF16 is deprecated. Use UTF16FromString instead.
+//If s contains a NUL byte this function panics instead of
+//returning an error.
 func StringToUTF16(s string) []uint16 {
 	a, err := UTF16FromString(s)
 	if err != nil {
@@ -82,27 +82,27 @@ func StringToUTF16(s string) []uint16 {
 	return a
 }
 
-// UTF16FromString returns the UTF-16 encoding of the UTF-8 string
-// s, with a terminating NUL added. If s contains a NUL byte at any
-// location, it returns (nil, syscall.EINVAL).
+//UTF16FromString returns the UTF-16 encoding of the UTF-8 string
+//s, with a terminating NUL added. If s contains a NUL byte at any
+//location, it returns (nil, syscall.EINVAL).
 func UTF16FromString(s string) ([]uint16, error) {
 	return syscall.UTF16FromString(s)
 }
 
-// UTF16ToString returns the UTF-8 encoding of the UTF-16 sequence s,
-// with a terminating NUL and any bytes after the NUL removed.
+//UTF16ToString returns the UTF-8 encoding of the UTF-16 sequence s,
+//with a terminating NUL and any bytes after the NUL removed.
 func UTF16ToString(s []uint16) string {
 	return syscall.UTF16ToString(s)
 }
 
-// StringToUTF16Ptr is deprecated. Use UTF16PtrFromString instead.
-// If s contains a NUL byte this function panics instead of
-// returning an error.
+//StringToUTF16Ptr is deprecated. Use UTF16PtrFromString instead.
+//If s contains a NUL byte this function panics instead of
+//returning an error.
 func StringToUTF16Ptr(s string) *uint16 { return &StringToUTF16(s)[0] }
 
-// UTF16PtrFromString returns pointer to the UTF-16 encoding of
-// the UTF-8 string s, with a terminating NUL added. If s
-// contains a NUL byte at any location, it returns (nil, syscall.EINVAL).
+//UTF16PtrFromString returns pointer to the UTF-16 encoding of
+//the UTF-8 string s, with a terminating NUL added. If s
+//contains a NUL byte at any location, it returns (nil, syscall.EINVAL).
 func UTF16PtrFromString(s string) (*uint16, error) {
 	a, err := UTF16FromString(s)
 	if err != nil {
@@ -111,9 +111,9 @@ func UTF16PtrFromString(s string) (*uint16, error) {
 	return &a[0], nil
 }
 
-// UTF16PtrToString takes a pointer to a UTF-16 sequence and returns the corresponding UTF-8 encoded string.
-// If the pointer is nil, it returns the empty string. It assumes that the UTF-16 sequence is terminated
-// at a zero word; if the zero word is not present, the program may crash.
+//UTF16PtrToString takes a pointer to a UTF-16 sequence and returns the corresponding UTF-8 encoded string.
+//If the pointer is nil, it returns the empty string. It assumes that the UTF-16 sequence is terminated
+//at a zero word; if the zero word is not present, the program may crash.
 func UTF16PtrToString(p *uint16) string {
 	if p == nil {
 		return ""
@@ -122,7 +122,7 @@ func UTF16PtrToString(p *uint16) string {
 		return ""
 	}
 
-	// Find NUL terminator.
+	//Find NUL terminator.
 	n := 0
 	for ptr := unsafe.Pointer(p); *(*uint16)(ptr) != 0; n++ {
 		ptr = unsafe.Pointer(uintptr(ptr) + unsafe.Sizeof(*p))
@@ -132,21 +132,21 @@ func UTF16PtrToString(p *uint16) string {
 
 func Getpagesize() int { return 4096 }
 
-// NewCallback converts a Go function to a function pointer conforming to the stdcall calling convention.
-// This is useful when interoperating with Windows code requiring callbacks.
-// The argument is expected to be a function with one uintptr-sized result. The function must not have arguments with size larger than the size of uintptr.
+//NewCallback converts a Go function to a function pointer conforming to the stdcall calling convention.
+//This is useful when interoperating with Windows code requiring callbacks.
+//The argument is expected to be a function with one uintptr-sized result. The function must not have arguments with size larger than the size of uintptr.
 func NewCallback(fn interface{}) uintptr {
 	return syscall.NewCallback(fn)
 }
 
-// NewCallbackCDecl converts a Go function to a function pointer conforming to the cdecl calling convention.
-// This is useful when interoperating with Windows code requiring callbacks.
-// The argument is expected to be a function with one uintptr-sized result. The function must not have arguments with size larger than the size of uintptr.
+//NewCallbackCDecl converts a Go function to a function pointer conforming to the cdecl calling convention.
+//This is useful when interoperating with Windows code requiring callbacks.
+//The argument is expected to be a function with one uintptr-sized result. The function must not have arguments with size larger than the size of uintptr.
 func NewCallbackCDecl(fn interface{}) uintptr {
 	return syscall.NewCallbackCDecl(fn)
 }
 
-// windows api calls
+//windows api calls
 
 //sys	GetLastError() (lasterr error)
 //sys	LoadLibrary(libname string) (handle Handle, err error) = LoadLibraryW
@@ -328,7 +328,7 @@ func NewCallbackCDecl(fn interface{}) uintptr {
 //sys	Thread32First(snapshot Handle, threadEntry *ThreadEntry32) (err error)
 //sys	Thread32Next(snapshot Handle, threadEntry *ThreadEntry32) (err error)
 //sys	DeviceIoControl(handle Handle, ioControlCode uint32, inBuffer *byte, inBufferSize uint32, outBuffer *byte, outBufferSize uint32, bytesReturned *uint32, overlapped *Overlapped) (err error)
-// This function returns 1 byte BOOLEAN rather than the 4 byte BOOL.
+//This function returns 1 byte BOOLEAN rather than the 4 byte BOOL.
 //sys	CreateSymbolicLink(symlinkfilename *uint16, targetfilename *uint16, flags uint32) (err error) [failretval&0xff==0] = CreateSymbolicLinkW
 //sys	CreateHardLink(filename *uint16, existingfilename *uint16, reserved uintptr) (err error) [failretval&0xff==0] = CreateHardLinkW
 //sys	GetCurrentThreadId() (id uint32)
@@ -385,7 +385,7 @@ func NewCallbackCDecl(fn interface{}) uintptr {
 //sys	GetGUIThreadInfo(thread uint32, info *GUIThreadInfo) (err error) = user32.GetGUIThreadInfo
 //sys	GetLargePageMinimum() (size uintptr)
 
-// Volume Management Functions
+//Volume Management Functions
 //sys	DefineDosDevice(flags uint32, deviceName *uint16, targetPath *uint16) (err error) = DefineDosDeviceW
 //sys	DeleteVolumeMountPoint(volumeMountPoint *uint16) (err error) = DeleteVolumeMountPointW
 //sys	FindFirstVolume(volumeName *uint16, bufferLength uint32) (handle Handle, err error) [failretval==InvalidHandle] = FindFirstVolumeW
@@ -425,12 +425,12 @@ func NewCallbackCDecl(fn interface{}) uintptr {
 //sys	LoadResource(module Handle, resInfo Handle) (resData Handle, err error) = kernel32.LoadResource
 //sys	LockResource(resData Handle) (addr uintptr, err error) = kernel32.LockResource
 
-// Version APIs
+//Version APIs
 //sys	GetFileVersionInfoSize(filename string, zeroHandle *Handle) (bufSize uint32, err error) = version.GetFileVersionInfoSizeW
 //sys	GetFileVersionInfo(filename string, handle uint32, bufSize uint32, buffer unsafe.Pointer) (err error) = version.GetFileVersionInfoW
 //sys	VerQueryValue(block unsafe.Pointer, subBlock string, pointerToBufferPointer unsafe.Pointer, bufSize *uint32) (err error) = version.VerQueryValueW
 
-// Process Status API (PSAPI)
+//Process Status API (PSAPI)
 //sys	enumProcesses(processIds *uint32, nSize uint32, bytesReturned *uint32) (err error) = psapi.EnumProcesses
 //sys	EnumProcessModules(process Handle, module *Handle, cb uint32, cbNeeded *uint32) (err error) = psapi.EnumProcessModules
 //sys	EnumProcessModulesEx(process Handle, module *Handle, cb uint32, cbNeeded *uint32, filterFlag uint32) (err error) = psapi.EnumProcessModulesEx
@@ -439,7 +439,7 @@ func NewCallbackCDecl(fn interface{}) uintptr {
 //sys	GetModuleBaseName(process Handle, module Handle, baseName *uint16, size uint32) (err error) = psapi.GetModuleBaseNameW
 //sys   QueryWorkingSetEx(process Handle, pv uintptr, cb uint32) (err error) = psapi.QueryWorkingSetEx
 
-// NT Native APIs
+//NT Native APIs
 //sys	rtlNtStatusToDosErrorNoTeb(ntstatus NTStatus) (ret syscall.Errno) = ntdll.RtlNtStatusToDosErrorNoTeb
 //sys	rtlGetVersion(info *OsVersionInfoEx) (ntstatus error) = ntdll.RtlGetVersion
 //sys	rtlGetNtVersionNumbers(majorVersion *uint32, minorVersion *uint32, buildNumber *uint32) = ntdll.RtlGetNtVersionNumbers
@@ -459,46 +459,46 @@ func NewCallbackCDecl(fn interface{}) uintptr {
 //sys	RtlAddFunctionTable(functionTable *RUNTIME_FUNCTION, entryCount uint32, baseAddress uintptr) (ret bool) = ntdll.RtlAddFunctionTable
 //sys	RtlDeleteFunctionTable(functionTable *RUNTIME_FUNCTION) (ret bool) = ntdll.RtlDeleteFunctionTable
 
-// Desktop Window Manager API (Dwmapi)
+//Desktop Window Manager API (Dwmapi)
 //sys	DwmGetWindowAttribute(hwnd HWND, attribute uint32, value unsafe.Pointer, size uint32) (ret error) = dwmapi.DwmGetWindowAttribute
 //sys	DwmSetWindowAttribute(hwnd HWND, attribute uint32, value unsafe.Pointer, size uint32) (ret error) = dwmapi.DwmSetWindowAttribute
 
-// Windows Multimedia API
+//Windows Multimedia API
 //sys TimeBeginPeriod (period uint32) (err error) [failretval != 0] = winmm.timeBeginPeriod
 //sys TimeEndPeriod (period uint32) (err error) [failretval != 0] = winmm.timeEndPeriod
 
-// syscall interface implementation for other packages
+//syscall interface implementation for other packages
 
-// GetCurrentProcess returns the handle for the current process.
-// It is a pseudo handle that does not need to be closed.
-// The returned error is always nil.
+//GetCurrentProcess returns the handle for the current process.
+//It is a pseudo handle that does not need to be closed.
+//The returned error is always nil.
 //
-// Deprecated: use CurrentProcess for the same Handle without the nil
-// error.
+//Deprecated: use CurrentProcess for the same Handle without the nil
+//error.
 func GetCurrentProcess() (Handle, error) {
 	return CurrentProcess(), nil
 }
 
-// CurrentProcess returns the handle for the current process.
-// It is a pseudo handle that does not need to be closed.
+//CurrentProcess returns the handle for the current process.
+//It is a pseudo handle that does not need to be closed.
 func CurrentProcess() Handle { return Handle(^uintptr(1 - 1)) }
 
-// GetCurrentThread returns the handle for the current thread.
-// It is a pseudo handle that does not need to be closed.
-// The returned error is always nil.
+//GetCurrentThread returns the handle for the current thread.
+//It is a pseudo handle that does not need to be closed.
+//The returned error is always nil.
 //
-// Deprecated: use CurrentThread for the same Handle without the nil
-// error.
+//Deprecated: use CurrentThread for the same Handle without the nil
+//error.
 func GetCurrentThread() (Handle, error) {
 	return CurrentThread(), nil
 }
 
-// CurrentThread returns the handle for the current thread.
-// It is a pseudo handle that does not need to be closed.
+//CurrentThread returns the handle for the current thread.
+//It is a pseudo handle that does not need to be closed.
 func CurrentThread() Handle { return Handle(^uintptr(2 - 1)) }
 
-// GetProcAddressByOrdinal retrieves the address of the exported
-// function from module by ordinal.
+//GetProcAddressByOrdinal retrieves the address of the exported
+//function from module by ordinal.
 func GetProcAddressByOrdinal(module Handle, ordinal uintptr) (proc uintptr, err error) {
 	r0, _, e1 := syscall.Syscall(procGetProcAddress.Addr(), 2, uintptr(module), ordinal, 0)
 	proc = uintptr(r0)
@@ -572,7 +572,7 @@ func Read(fd Handle, p []byte) (n int, err error) {
 	e := ReadFile(fd, p, &done, nil)
 	if e != nil {
 		if e == ERROR_BROKEN_PIPE {
-			// NOTE(brainman): work around ERROR_BROKEN_PIPE is returned on reading EOF from stdin
+			//NOTE(brainman): work around ERROR_BROKEN_PIPE is returned on reading EOF from stdin
 			return 0, nil
 		}
 		return 0, e
@@ -628,7 +628,7 @@ func Seek(fd Handle, offset int64, whence int) (newoffset int64, err error) {
 	}
 	hi := int32(offset >> 32)
 	lo := int32(offset)
-	// use GetFileType to check pipe, pipe can't do seek
+	//use GetFileType to check pipe, pipe can't do seek
 	ft, _ := GetFileType(fd)
 	if ft == FILE_TYPE_PIPE {
 		return 0, syscall.EPIPE
@@ -836,9 +836,9 @@ func LoadSetFileCompletionNotificationModes() error {
 }
 
 func WaitForMultipleObjects(handles []Handle, waitAll bool, waitMilliseconds uint32) (event uint32, err error) {
-	// Every other win32 array API takes arguments as "pointer, count", except for this function. So we
-	// can't declare it as a usual [] type, because mksyscall will use the opposite order. We therefore
-	// trivially stub this ourselves.
+	//Every other win32 array API takes arguments as "pointer, count", except for this function. So we
+	//can't declare it as a usual [] type, because mksyscall will use the opposite order. We therefore
+	//trivially stub this ourselves.
 
 	var handlePtr *Handle
 	if len(handles) > 0 {
@@ -847,7 +847,7 @@ func WaitForMultipleObjects(handles []Handle, waitAll bool, waitMilliseconds uin
 	return waitForMultipleObjects(uint32(len(handles)), uintptr(unsafe.Pointer(handlePtr)), waitAll, waitMilliseconds)
 }
 
-// net api calls
+//net api calls
 
 const socket_error = uintptr(^uint32(0))
 
@@ -895,8 +895,8 @@ const socket_error = uintptr(^uint32(0))
 //sys	MultiByteToWideChar(codePage uint32, dwFlags uint32, str *byte, nstr int32, wchar *uint16, nwchar int32) (nwrite int32, err error) = kernel32.MultiByteToWideChar
 //sys	getBestInterfaceEx(sockaddr unsafe.Pointer, pdwBestIfIndex *uint32) (errcode error) = iphlpapi.GetBestInterfaceEx
 
-// For testing: clients can set this flag to force
-// creation of IPv6 sockets to return EAFNOSUPPORT.
+//For testing: clients can set this flag to force
+//creation of IPv6 sockets to return EAFNOSUPPORT.
 var SocketDisableIPv6 bool
 
 type RawSockaddrInet4 struct {
@@ -925,7 +925,7 @@ type RawSockaddrAny struct {
 }
 
 type Sockaddr interface {
-	sockaddr() (ptr unsafe.Pointer, len int32, err error) // lowercase; only we can define Sockaddrs
+	sockaddr() (ptr unsafe.Pointer, len int32, err error) //lowercase; only we can define Sockaddrs
 }
 
 type SockaddrInet4 struct {
@@ -989,15 +989,15 @@ func (sa *SockaddrUnix) sockaddr() (unsafe.Pointer, int32, error) {
 	for i := 0; i < n; i++ {
 		sa.raw.Path[i] = int8(name[i])
 	}
-	// length is family (uint16), name, NUL.
+	//length is family (uint16), name, NUL.
 	sl := int32(2)
 	if n > 0 {
 		sl += int32(n) + 1
 	}
 	if sa.raw.Path[0] == '@' || (sa.raw.Path[0] == 0 && sl > 3) {
-		// Check sl > 3 so we don't change unnamed socket behavior.
+		//Check sl > 3 so we don't change unnamed socket behavior.
 		sa.raw.Path[0] = 0
-		// Don't count trailing NUL for abstract address.
+		//Don't count trailing NUL for abstract address.
 		sl--
 	}
 
@@ -1036,19 +1036,19 @@ func (rsa *RawSockaddrAny) Sockaddr() (Sockaddr, error) {
 		pp := (*RawSockaddrUnix)(unsafe.Pointer(rsa))
 		sa := new(SockaddrUnix)
 		if pp.Path[0] == 0 {
-			// "Abstract" Unix domain socket.
-			// Rewrite leading NUL as @ for textual display.
-			// (This is the standard convention.)
-			// Not friendly to overwrite in place,
-			// but the callers below don't care.
+			//"Abstract" Unix domain socket.
+			//Rewrite leading NUL as @ for textual display.
+			//(This is the standard convention.)
+			//Not friendly to overwrite in place,
+			//but the callers below don't care.
 			pp.Path[0] = '@'
 		}
 
-		// Assume path ends at NUL.
-		// This is not technically the Linux semantics for
-		// abstract Unix domain sockets--they are supposed
-		// to be uninterpreted fixed-size binary blobs--but
-		// everyone uses this convention.
+		//Assume path ends at NUL.
+		//This is not technically the Linux semantics for
+		//abstract Unix domain sockets--they are supposed
+		//to be uninterpreted fixed-size binary blobs--but
+		//everyone uses this convention.
 		n := 0
 		for n < len(pp.Path) && pp.Path[n] != 0 {
 			n++
@@ -1265,7 +1265,7 @@ func WSARecvMsg(fd Handle, msg *WSAMsg, bytesReceived *uint32, overlapped *Overl
 	return err
 }
 
-// Invented structures to support what package os expects.
+//Invented structures to support what package os expects.
 type Rusage struct {
 	CreationTime Filetime
 	ExitTime     Filetime
@@ -1295,8 +1295,8 @@ func (w WaitStatus) Signaled() bool { return false }
 
 func (w WaitStatus) TrapCause() int { return -1 }
 
-// Timespec is an invented structure on Windows, but here for
-// consistency with the corresponding package for other operating systems.
+//Timespec is an invented structure on Windows, but here for
+//consistency with the corresponding package for other operating systems.
 type Timespec struct {
 	Sec  int64
 	Nsec int64
@@ -1310,7 +1310,7 @@ func NsecToTimespec(nsec int64) (ts Timespec) {
 	return
 }
 
-// TODO(brainman): fix all needed for net
+//TODO(brainman): fix all needed for net
 
 func Accept(fd Handle) (nfd Handle, sa Sockaddr, err error) { return 0, nil, syscall.EWINDOWS }
 
@@ -1336,12 +1336,12 @@ func Sendto(fd Handle, p []byte, flags int, to Sockaddr) (err error) {
 
 func SetsockoptTimeval(fd Handle, level, opt int, tv *Timeval) (err error) { return syscall.EWINDOWS }
 
-// The Linger struct is wrong but we only noticed after Go 1.
-// sysLinger is the real system call structure.
+//The Linger struct is wrong but we only noticed after Go 1.
+//sysLinger is the real system call structure.
 
-// BUG(brainman): The definition of Linger is not appropriate for direct use
-// with Setsockopt and Getsockopt.
-// Use SetsockoptLinger instead.
+//BUG(brainman): The definition of Linger is not appropriate for direct use
+//with Setsockopt and Getsockopt.
+//Use SetsockoptLinger instead.
 
 type Linger struct {
 	Onoff  int32
@@ -1388,8 +1388,8 @@ func SetsockoptIPv6Mreq(fd Handle, level, opt int, mreq *IPv6Mreq) (err error) {
 }
 
 func EnumProcesses(processIds []uint32, bytesReturned *uint32) error {
-	// EnumProcesses syscall expects the size parameter to be in bytes, but the code generated with mksyscall uses
-	// the length of the processIds slice instead. Hence, this wrapper function is added to fix the discrepancy.
+	//EnumProcesses syscall expects the size parameter to be in bytes, but the code generated with mksyscall uses
+	//the length of the processIds slice instead. Hence, this wrapper function is added to fix the discrepancy.
 	var p *uint32
 	if len(processIds) > 0 {
 		p = &processIds[0]
@@ -1401,14 +1401,14 @@ func EnumProcesses(processIds []uint32, bytesReturned *uint32) error {
 func Getpid() (pid int) { return int(GetCurrentProcessId()) }
 
 func FindFirstFile(name *uint16, data *Win32finddata) (handle Handle, err error) {
-	// NOTE(rsc): The Win32finddata struct is wrong for the system call:
-	// the two paths are each one uint16 short. Use the correct struct,
-	// a win32finddata1, and then copy the results out.
-	// There is no loss of expressivity here, because the final
-	// uint16, if it is used, is supposed to be a NUL, and Go doesn't need that.
-	// For Go 1.1, we might avoid the allocation of win32finddata1 here
-	// by adding a final Bug [2]uint16 field to the struct and then
-	// adjusting the fields in the result directly.
+	//NOTE(rsc): The Win32finddata struct is wrong for the system call:
+	//the two paths are each one uint16 short. Use the correct struct,
+	//a win32finddata1, and then copy the results out.
+	//There is no loss of expressivity here, because the final
+	//uint16, if it is used, is supposed to be a NUL, and Go doesn't need that.
+	//For Go 1.1, we might avoid the allocation of win32finddata1 here
+	//by adding a final Bug [2]uint16 field to the struct and then
+	//adjusting the fields in the result directly.
 	var data1 win32finddata1
 	handle, err = findFirstFile1(name, &data1)
 	if err == nil {
@@ -1456,7 +1456,7 @@ func Getppid() (ppid int) {
 	return int(pe.ParentProcessID)
 }
 
-// TODO(brainman): fix all needed for os
+//TODO(brainman): fix all needed for os
 func Fchdir(fd Handle) (err error)             { return syscall.EWINDOWS }
 func Link(oldpath, newpath string) (err error) { return syscall.EWINDOWS }
 func Symlink(path, link string) (err error)    { return syscall.EWINDOWS }
@@ -1490,7 +1490,7 @@ func LoadCreateSymbolicLink() error {
 	return procCreateSymbolicLinkW.Find()
 }
 
-// Readlink returns the destination of the named symbolic link.
+//Readlink returns the destination of the named symbolic link.
 func Readlink(path string, buf []byte) (n int, err error) {
 	fd, err := CreateFile(StringToUTF16Ptr(path), GENERIC_READ, 0, nil, OPEN_EXISTING,
 		FILE_FLAG_OPEN_REPARSE_POINT|FILE_FLAG_BACKUP_SEMANTICS, 0)
@@ -1518,8 +1518,8 @@ func Readlink(path string, buf []byte) (n int, err error) {
 		p := (*[0xffff]uint16)(unsafe.Pointer(&data.PathBuffer[0]))
 		s = UTF16ToString(p[data.PrintNameOffset/2 : (data.PrintNameLength-data.PrintNameOffset)/2])
 	default:
-		// the path is not a symlink or junction but another type of reparse
-		// point
+		//the path is not a symlink or junction but another type of reparse
+		//point
 		return -1, syscall.ENOENT
 	}
 	n = copy(buf, []byte(s))
@@ -1527,8 +1527,8 @@ func Readlink(path string, buf []byte) (n int, err error) {
 	return n, nil
 }
 
-// GUIDFromString parses a string in the form of
-// "{XXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}" into a GUID.
+//GUIDFromString parses a string in the form of
+//"{XXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}" into a GUID.
 func GUIDFromString(str string) (GUID, error) {
 	guid := GUID{}
 	str16, err := syscall.UTF16PtrFromString(str)
@@ -1542,7 +1542,7 @@ func GUIDFromString(str string) (GUID, error) {
 	return guid, nil
 }
 
-// GenerateGUID creates a new random GUID.
+//GenerateGUID creates a new random GUID.
 func GenerateGUID() (GUID, error) {
 	guid := GUID{}
 	err := coCreateGuid(&guid)
@@ -1552,8 +1552,8 @@ func GenerateGUID() (GUID, error) {
 	return guid, nil
 }
 
-// String returns the canonical string form of the GUID,
-// in the form of "{XXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}".
+//String returns the canonical string form of the GUID,
+//in the form of "{XXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}".
 func (guid GUID) String() string {
 	var str [100]uint16
 	chars := stringFromGUID2(&guid, &str[0], int32(len(str)))
@@ -1563,14 +1563,14 @@ func (guid GUID) String() string {
 	return string(utf16.Decode(str[:chars-1]))
 }
 
-// KnownFolderPath returns a well-known folder path for the current user, specified by one of
-// the FOLDERID_ constants, and chosen and optionally created based on a KF_ flag.
+//KnownFolderPath returns a well-known folder path for the current user, specified by one of
+//the FOLDERID_ constants, and chosen and optionally created based on a KF_ flag.
 func KnownFolderPath(folderID *KNOWNFOLDERID, flags uint32) (string, error) {
 	return Token(0).KnownFolderPath(folderID, flags)
 }
 
-// KnownFolderPath returns a well-known folder path for the user token, specified by one of
-// the FOLDERID_ constants, and chosen and optionally created based on a KF_ flag.
+//KnownFolderPath returns a well-known folder path for the user token, specified by one of
+//the FOLDERID_ constants, and chosen and optionally created based on a KF_ flag.
 func (t Token) KnownFolderPath(folderID *KNOWNFOLDERID, flags uint32) (string, error) {
 	var p *uint16
 	err := shGetKnownFolderPath(folderID, flags, t, &p)
@@ -1581,43 +1581,43 @@ func (t Token) KnownFolderPath(folderID *KNOWNFOLDERID, flags uint32) (string, e
 	return UTF16PtrToString(p), nil
 }
 
-// RtlGetVersion returns the version of the underlying operating system, ignoring
-// manifest semantics but is affected by the application compatibility layer.
+//RtlGetVersion returns the version of the underlying operating system, ignoring
+//manifest semantics but is affected by the application compatibility layer.
 func RtlGetVersion() *OsVersionInfoEx {
 	info := &OsVersionInfoEx{}
 	info.osVersionInfoSize = uint32(unsafe.Sizeof(*info))
-	// According to documentation, this function always succeeds.
-	// The function doesn't even check the validity of the
-	// osVersionInfoSize member. Disassembling ntdll.dll indicates
-	// that the documentation is indeed correct about that.
+	//According to documentation, this function always succeeds.
+	//The function doesn't even check the validity of the
+	//osVersionInfoSize member. Disassembling ntdll.dll indicates
+	//that the documentation is indeed correct about that.
 	_ = rtlGetVersion(info)
 	return info
 }
 
-// RtlGetNtVersionNumbers returns the version of the underlying operating system,
-// ignoring manifest semantics and the application compatibility layer.
+//RtlGetNtVersionNumbers returns the version of the underlying operating system,
+//ignoring manifest semantics and the application compatibility layer.
 func RtlGetNtVersionNumbers() (majorVersion, minorVersion, buildNumber uint32) {
 	rtlGetNtVersionNumbers(&majorVersion, &minorVersion, &buildNumber)
 	buildNumber &= 0xffff
 	return
 }
 
-// GetProcessPreferredUILanguages retrieves the process preferred UI languages.
+//GetProcessPreferredUILanguages retrieves the process preferred UI languages.
 func GetProcessPreferredUILanguages(flags uint32) ([]string, error) {
 	return getUILanguages(flags, getProcessPreferredUILanguages)
 }
 
-// GetThreadPreferredUILanguages retrieves the thread preferred UI languages for the current thread.
+//GetThreadPreferredUILanguages retrieves the thread preferred UI languages for the current thread.
 func GetThreadPreferredUILanguages(flags uint32) ([]string, error) {
 	return getUILanguages(flags, getThreadPreferredUILanguages)
 }
 
-// GetUserPreferredUILanguages retrieves information about the user preferred UI languages.
+//GetUserPreferredUILanguages retrieves information about the user preferred UI languages.
 func GetUserPreferredUILanguages(flags uint32) ([]string, error) {
 	return getUILanguages(flags, getUserPreferredUILanguages)
 }
 
-// GetSystemPreferredUILanguages retrieves the system preferred UI languages.
+//GetSystemPreferredUILanguages retrieves the system preferred UI languages.
 func GetSystemPreferredUILanguages(flags uint32) ([]string, error) {
 	return getUILanguages(flags, getSystemPreferredUILanguages)
 }
@@ -1635,11 +1635,11 @@ func getUILanguages(flags uint32, f func(flags uint32, numLanguages *uint32, buf
 			return nil, err
 		}
 		buf = buf[:size]
-		if numLanguages == 0 || len(buf) == 0 { // GetProcessPreferredUILanguages may return numLanguages==0 with "\0\0"
+		if numLanguages == 0 || len(buf) == 0 { //GetProcessPreferredUILanguages may return numLanguages==0 with "\0\0"
 			return []string{}, nil
 		}
 		if buf[len(buf)-1] == 0 {
-			buf = buf[:len(buf)-1] // remove terminating null
+			buf = buf[:len(buf)-1] //remove terminating null
 		}
 		languages := make([]string, 0, numLanguages)
 		from := 0
@@ -1674,16 +1674,16 @@ func (s NTStatus) Error() string {
 	if err != nil {
 		return fmt.Sprintf("NTSTATUS 0x%08x", uint32(s))
 	}
-	// trim terminating \r and \n
+	//trim terminating \r and \n
 	for ; n > 0 && (b[n-1] == '\n' || b[n-1] == '\r'); n-- {
 	}
 	return string(utf16.Decode(b[:n]))
 }
 
-// NewNTUnicodeString returns a new NTUnicodeString structure for use with native
-// NT APIs that work over the NTUnicodeString type. Note that most Windows APIs
-// do not use NTUnicodeString, and instead UTF16PtrFromString should be used for
-// the more common *uint16 string type.
+//NewNTUnicodeString returns a new NTUnicodeString structure for use with native
+//NT APIs that work over the NTUnicodeString type. Note that most Windows APIs
+//do not use NTUnicodeString, and instead UTF16PtrFromString should be used for
+//the more common *uint16 string type.
 func NewNTUnicodeString(s string) (*NTUnicodeString, error) {
 	var u NTUnicodeString
 	s16, err := UTF16PtrFromString(s)
@@ -1694,7 +1694,7 @@ func NewNTUnicodeString(s string) (*NTUnicodeString, error) {
 	return &u, nil
 }
 
-// Slice returns a uint16 slice that aliases the data in the NTUnicodeString.
+//Slice returns a uint16 slice that aliases the data in the NTUnicodeString.
 func (s *NTUnicodeString) Slice() []uint16 {
 	slice := unsafe.Slice(s.Buffer, s.MaximumLength)
 	return slice[:s.Length]
@@ -1704,10 +1704,10 @@ func (s *NTUnicodeString) String() string {
 	return UTF16ToString(s.Slice())
 }
 
-// NewNTString returns a new NTString structure for use with native
-// NT APIs that work over the NTString type. Note that most Windows APIs
-// do not use NTString, and instead UTF16PtrFromString should be used for
-// the more common *uint16 string type.
+//NewNTString returns a new NTString structure for use with native
+//NT APIs that work over the NTString type. Note that most Windows APIs
+//do not use NTString, and instead UTF16PtrFromString should be used for
+//the more common *uint16 string type.
 func NewNTString(s string) (*NTString, error) {
 	var nts NTString
 	s8, err := BytePtrFromString(s)
@@ -1718,7 +1718,7 @@ func NewNTString(s string) (*NTString, error) {
 	return &nts, nil
 }
 
-// Slice returns a byte slice that aliases the data in the NTString.
+//Slice returns a byte slice that aliases the data in the NTString.
 func (s *NTString) Slice() []byte {
 	slice := unsafe.Slice(s.Buffer, s.MaximumLength)
 	return slice[:s.Length]
@@ -1728,7 +1728,7 @@ func (s *NTString) String() string {
 	return ByteSliceToString(s.Slice())
 }
 
-// FindResource resolves a resource of the given name and resource type.
+//FindResource resolves a resource of the given name and resource type.
 func FindResource(module Handle, name, resType ResourceIDOrString) (Handle, error) {
 	var namePtr, resTypePtr uintptr
 	var name16, resType16 *uint16
@@ -1777,11 +1777,11 @@ func LoadResourceData(module, resInfo Handle) (data []byte, err error) {
 	return
 }
 
-// PSAPI_WORKING_SET_EX_BLOCK contains extended working set information for a page.
+//PSAPI_WORKING_SET_EX_BLOCK contains extended working set information for a page.
 type PSAPI_WORKING_SET_EX_BLOCK uint64
 
-// Valid returns the validity of this page.
-// If this bit is 1, the subsequent members are valid; otherwise they should be ignored.
+//Valid returns the validity of this page.
+//If this bit is 1, the subsequent members are valid; otherwise they should be ignored.
 func (b PSAPI_WORKING_SET_EX_BLOCK) Valid() bool {
 	return (b & 1) == 1
 }

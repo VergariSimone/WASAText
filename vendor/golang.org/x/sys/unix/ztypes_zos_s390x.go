@@ -1,11 +1,11 @@
-//  Copyright 2020 The Go Authors. All rights reserved.
-//  Use of this source code is governed by a BSD-style
-//  license that can be found in the LICENSE file.
+// Copyright 2020 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
-// go:build zos && s390x
+//go:build zos && s390x
 
-//  Hand edited based on ztypes_linux_s390x.go
-//  TODO: auto-generate.
+// Hand edited based on ztypes_linux_s390x.go
+// TODO: auto-generate.
 
 package unix
 
@@ -51,13 +51,13 @@ type Timeval struct {
 	Usec int64
 }
 
-type timeval_zos struct { // correct (with padding and all)
+type timeval_zos struct { //correct (with padding and all)
 	Sec  int64
-	_    [4]byte //  pad
+	_    [4]byte // pad
 	Usec int32
 }
 
-type Tms struct { // clock_t is 4-byte unsigned int in zos
+type Tms struct { //clock_t is 4-byte unsigned int in zos
 	Utime  uint32
 	Stime  uint32
 	Cutime uint32
@@ -116,7 +116,7 @@ type RawSockaddr struct {
 
 type RawSockaddrAny struct {
 	Addr RawSockaddr
-	_    [112]uint8 //  pad
+	_    [112]uint8 // pad
 }
 
 type _Socklen uint32
@@ -240,14 +240,14 @@ type Rlimit struct {
 	Max uint64
 }
 
-//  { int, short, short } in poll.h
+// { int, short, short } in poll.h
 type PollFd struct {
 	Fd      int32
 	Events  int16
 	Revents int16
 }
 
-type Stat_t struct { // Linux Definition
+type Stat_t struct { //Linux Definition
 	Dev     uint64
 	Ino     uint64
 	Nlink   uint64
@@ -266,7 +266,7 @@ type Stat_t struct { // Linux Definition
 }
 
 type Stat_LE_t struct {
-	_            [4]byte //  eye catcher
+	_            [4]byte // eye catcher
 	Length       uint16
 	Version      uint16
 	Mode         int32
@@ -285,10 +285,10 @@ type Stat_LE_t struct {
 	Blksize      int32
 	Creatim31    [4]byte
 	AuditID      [16]byte
-	_            [4]byte //  rsrvd1
+	_            [4]byte // rsrvd1
 	File_tag     struct {
 		Ccsid   uint16
-		Txtflag uint16 //  aggregating Txflag:1 deferred:1 rsvflags:14
+		Txtflag uint16 // aggregating Txflag:1 deferred:1 rsvflags:14
 	}
 	CharsetID [8]byte
 	Blocks    int64
@@ -297,17 +297,17 @@ type Stat_LE_t struct {
 	Fid       [8]byte
 	Filefmt   byte
 	Fspflag2  byte
-	_         [2]byte //  rsrvd2
+	_         [2]byte // rsrvd2
 	Ctimemsec int32
 	Seclabel  [8]byte
-	_         [4]byte //  rsrvd3
-	_         [4]byte //  rsrvd4
+	_         [4]byte // rsrvd3
+	_         [4]byte // rsrvd4
 	Atim      Time_t
 	Mtim      Time_t
 	Ctim      Time_t
 	Creatim   Time_t
 	Reftim    Time_t
-	_         [24]byte //  rsrvd5
+	_         [24]byte // rsrvd5
 }
 
 type Statvfs_t struct {
@@ -368,7 +368,7 @@ type FdSet struct {
 	Bits [64]int32
 }
 
-//  This struct is packed on z/OS so it can't be used directly.
+// This struct is packed on z/OS so it can't be used directly.
 type Flock_t struct {
 	Type   int16
 	Whence int16
@@ -395,8 +395,8 @@ type Winsize struct {
 type W_Mnth struct {
 	Hid   [4]byte
 	Size  int32
-	Cur1  int32 // 32bit pointer
-	Cur2  int32 // ^
+	Cur1  int32 //32bit pointer
+	Cur2  int32 //^
 	Devno uint32
 	_     [4]byte
 }

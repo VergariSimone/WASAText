@@ -81,7 +81,7 @@ func (rt *_router) resolveConversationAndReply(token, conversationParam, replyPa
 	var conID int
 	var err error
 
-	//SE CONV È NUMERICA, ALLORA ID
+	// SE CONV È NUMERICA, ALLORA ID
 	if isNumeric.MatchString(conversationParam) {
 		conID, err = strconv.Atoi(conversationParam)
 		if err != nil {
