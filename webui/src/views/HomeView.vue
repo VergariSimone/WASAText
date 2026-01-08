@@ -322,7 +322,7 @@
 									 @click="choose(cvs.conid)">
 									
 									<div class="chat">
-										<img class="chatimg" v-if="!cvs.photo" src="/standard2.gif"/>
+										<img class="chatimg" v-if="!cvs.photo" src="/profile.svg"/>
 										<img class="chatimg" v-else :src="'data:image/gif;base64,' + cvs.photo"/>
 										
 										<div class="details">

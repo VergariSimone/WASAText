@@ -123,7 +123,7 @@
           <div class="infoname">Foto:</div>  
           <div id="xPhoto" class="camera Photo">
               <div class="img-wrapper">
-                  <img id="pimg" v-if="ievent && ievent.photo == ''" src="/standard2.gif"/>
+                  <img id="pimg" v-if="ievent && ievent.photo == ''" src="/profile.svg"/>
                   <img id="pimg" v-if="ievent && ievent.photo != ''" v-bind:src="'data:image/gif;base64,' + ievent.photo"/>
               </div>
           </div> 

@@ -43,7 +43,7 @@ func (rt *_router) commentMessage(w http.ResponseWriter, r *http.Request, ps htt
 
 	// 5. Rispondi OK
 	w.WriteHeader(http.StatusCreated)
-	err := json.NewEncoder(w).Encode(map[string]interface{}{
+	err = json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":    id,
 		"emoji": req.Emoji,
 	})
