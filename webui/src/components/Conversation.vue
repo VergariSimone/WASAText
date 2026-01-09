@@ -248,10 +248,14 @@
             },
     
             // invio reazione 
-            async sendReaction(emojiChar) {
+            async sendReaction(emojiData) {
                 if (!this.selectedMessage) return;
                 this.showEmojiModal = false;
 
+                // Estraiamo l'emoji corretta dall'oggetto del picker
+                const emojiChar = emojiData.i ? emojiData.i : emojiData;
+
+                // Cerchiamo se ho già messo una reazione uguale
                 const existingReaction = this.selectedMessage.comments 
                     ? this.selectedMessage.comments.find(c => c.username === this.login && c.emoji === emojiChar)
                     : null;
@@ -261,56 +265,50 @@
 
                 try {
                     if (existingReaction) {
-                        // caso DELETE: la reaction esiste , la levo
-                        
-                        
-                        const idx = this.selectedMessage.comments.indexOf(existingReaction);
-                        if (idx > -1) this.selectedMessage.comments.splice(idx, 1);
-
+                        // DELETE: Rimuovi reazione (nessun body necessario)
                         await this.$axios.delete(
-                            `/conversations/byid/${conid}/message/${mesid}/comment/${existingReaction.commId}`, 
+                            `/conversations/byid/${conid}/message/${mesid}/comment`, 
                             { headers: { Authorization: "Bearer " + this.token } }
                         );
 
                     } else {
-                        // caso POST: la reaction non ce , la aggiungo
-                        
-                        
-                        const fakeReaction = {
-                            commId: Date.now(),
-                            emoji: emojiChar,
-                            username: this.login
-                        };
-                        if (!this.selectedMessage.comments) this.selectedMessage.comments = [];
-                        this.selectedMessage.comments.push(fakeReaction);
-
+                        // POST: Aggiungi reazione
+                        // CORREZIONE QUI SOTTO:
+                        // 1. Inviamo 'emojiChar' direttamente (non dentro un oggetto {})
+                        // 2. Aggiungiamo 'Content-Type': 'text/plain'
                         await this.$axios.post(
                             `/conversations/byid/${conid}/message/${mesid}/comment`, 
-                            { text: emojiChar }, 
-                            { headers: { Authorization: "Bearer " + this.token } }
+                            emojiChar, 
+                            { 
+                                headers: { 
+                                    Authorization: "Bearer " + this.token,
+                                    "Content-Type": "text/plain"
+                                } 
+                            }
                         );
                     }
                     
-                    
+                    // Ricarica la chat per vedere le modifiche
+                    this.refresh(); 
 
                 } catch (e) { 
                     console.error("Errore reazione:", e);
-                    this.errormsg = "Errore gestione reazione";
-                    
+                    this.errormsg = "Errore gestione reazione: " + (e.response ? e.response.status : e.message);
                 }
             },
+            
     
-            // eliminazione messaggio
+            // eliminazione messaggio (MODIFICATO PER EVITARE MUTAZIONE PROP)
             async deleteMsg(msg) {
                 try {
                     const conversationID = msg.conid || this.selectedconvs.conid;
                     await this.$axios.delete(`/conversations/byid/${conversationID}/message/${msg.mesid}`, { 
                         headers: { Authorization: "Bearer " + this.token } 
                     });
-                    if (this.selectedconvs && this.selectedconvs.message) {
-                        const index = this.selectedconvs.message.findIndex(m => m.mesid === msg.mesid);
-                        if (index !== -1) this.selectedconvs.message.splice(index, 1);
-                    }
+                    
+                    // FIX: Invece di splice su selectedconvs (che è prop), ricarichiamo.
+                    this.refresh();
+
                 } catch(e) { 
                     this.errormsg = (e.response && e.response.status === 403) 
                         ? "Non puoi eliminare messaggi altrui" 
@@ -461,14 +459,8 @@
                         <button class="btn-close-custom" @click="showEmojiModal = false">✕</button>
                     </div>
         
-                    <div class="emoji-grid">
-                        <span v-for="emoji in availableEmojis" 
-                            :key="emoji" 
-                             class="emoji-item" 
-                            @click="sendReaction(emoji)">
-                            {{ emoji }}
-                        </span>
-                    </div>
+                    <setcomment @send-comment="sendReaction" />
+
                 </div>
             </div>
             <div v-if="showForwardModal" class="modal-overlay">
