@@ -1,56 +1,61 @@
-<script setup>
-    import { defineEmits } from 'vue';
-    import EmojiPicker from 'vue3-emoji-picker';
-    import 'vue3-emoji-picker/css';
-    
-    // evento
-    const emit = defineEmits(['send-comment']);
-    
-    // chiamata al click dell emoji
-    const onSelectEmoji = (emoji) => {
-        emit('send-comment', emoji);
-    };
+<script>
+    export default {
+        name: 'SetComment',
+        emits: ['send-comment'],
+        data() {
+            return {
+                // La lista delle emoji 
+                availableEmojis: ['👍', '❤️', '😂', '😮', '😢', '😡', '👏', '🔥', '🎉']
+            }
+        },
+        methods: {
+            selectEmoji(emoji) {
+                // Emette direttamente la stringa (es. "👍")
+                this.$emit('send-comment', emoji);
+            }
+        }
+    }
     </script>
     
     <template>
-        <div class="set-comment-container">
-            <EmojiPicker 
-                :native="true"
-                :hide-search="false" 
-                :disable-skin-tones="true"
-                :hide-group-names="true"
-                :disabled-groups='["food_drink", "activities", "travel_places", "objects", "symbols", "flags"]'
-                @select="onSelectEmoji"
-                class="custom-picker"
-            />
+        <div class="emoji-container">
+            <div class="emoji-grid">
+                <span 
+                    v-for="emoji in availableEmojis" 
+                    :key="emoji" 
+                    class="emoji-item" 
+                    @click="selectEmoji(emoji)">
+                    {{ emoji }}
+                </span>
+            </div>
         </div>
     </template>
     
     <style scoped>
-    .set-comment-container {
+    .emoji-container {
+        padding: 10px;
         display: flex;
         justify-content: center;
-        align-items: center;
-        width: 100%;
-        background: transparent;
     }
     
-    /* stili per adattare il picker al tema scuro */
-    :deep(.v3-emoji-picker) {
-        width: 100% !important;
-        max-width: 320px;
-        height: 320px;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        
-        --ep-color-bg: #1e293b;
-        --ep-color-text: #f1f5f9;
-        --ep-color-border: #334155;
-        --ep-color-hover: #0f172a;
-        --ep-color-active: #2dd4bf;
-        --ep-search-bg: #0f172a;
-        --ep-search-text: #f1f5f9;
-        --ep-search-border: #334155;
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr); /* 3 per riga */
+        gap: 15px;
+    }
+    
+    .emoji-item {
+        font-size: 2rem;
+        cursor: pointer;
+        text-align: center;
+        transition: transform 0.2s;
+        padding: 5px;
+        border-radius: 5px;
+        user-select: none;
+    }
+    
+    .emoji-item:hover {
+        transform: scale(1.2);
+        background-color: rgba(255, 255, 255, 0.1);
     }
     </style>

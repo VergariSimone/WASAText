@@ -248,14 +248,13 @@
             },
     
             // invio reazione 
-            async sendReaction(emojiData) {
+            async sendReaction(emojiChar) {
                 if (!this.selectedMessage) return;
+                
+                // Chiudi il modale
                 this.showEmojiModal = false;
 
-                // Estraiamo l'emoji corretta dall'oggetto del picker
-                const emojiChar = emojiData.i ? emojiData.i : emojiData;
-
-                // Cerchiamo se ho già messo una reazione uguale
+                // 1. Controllo logico locale (opzionale, per UI immediata)
                 const existingReaction = this.selectedMessage.comments 
                     ? this.selectedMessage.comments.find(c => c.username === this.login && c.emoji === emojiChar)
                     : null;
@@ -265,7 +264,7 @@
 
                 try {
                     if (existingReaction) {
-                        // DELETE: Rimuovi reazione (nessun body necessario)
+                        // DELETE: Rimuovi reazione
                         await this.$axios.delete(
                             `/conversations/byid/${conid}/message/${mesid}/comment`, 
                             { headers: { Authorization: "Bearer " + this.token } }
@@ -273,32 +272,25 @@
 
                     } else {
                         // POST: Aggiungi reazione
-                        // CORREZIONE QUI SOTTO:
-                        // 1. Inviamo 'emojiChar' direttamente (non dentro un oggetto {})
-                        // 2. Aggiungiamo 'Content-Type': 'text/plain'
+                        // TORNATO ALL'ORIGINALE: Inviamo un JSON { "text": "👍" }
                         await this.$axios.post(
                             `/conversations/byid/${conid}/message/${mesid}/comment`, 
-                            emojiChar, 
-                            { 
-                                headers: { 
-                                    Authorization: "Bearer " + this.token,
-                                    "Content-Type": "text/plain"
-                                } 
-                            }
+                            { text: emojiChar }, 
+                            { headers: { Authorization: "Bearer " + this.token } }
                         );
                     }
                     
-                    // Ricarica la chat per vedere le modifiche
+                    // Ricarica per aggiornare la vista
                     this.refresh(); 
 
                 } catch (e) { 
                     console.error("Errore reazione:", e);
-                    this.errormsg = "Errore gestione reazione: " + (e.response ? e.response.status : e.message);
+                    this.errormsg = "Errore gestione reazione";
                 }
             },
             
     
-            // eliminazione messaggio (MODIFICATO PER EVITARE MUTAZIONE PROP)
+            // eliminazione messaggio 
             async deleteMsg(msg) {
                 try {
                     const conversationID = msg.conid || this.selectedconvs.conid;
@@ -306,7 +298,6 @@
                         headers: { Authorization: "Bearer " + this.token } 
                     });
                     
-                    // FIX: Invece di splice su selectedconvs (che è prop), ricarichiamo.
                     this.refresh();
 
                 } catch(e) { 
