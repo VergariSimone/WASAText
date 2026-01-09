@@ -98,7 +98,7 @@ func (db *appdbimpl) Ping() error {
 
 // createTables contiene le query per creare la struttura del database
 func createTables(db *sql.DB) error {
-	
+
 	// Tabella Users
 	queryUsers := `CREATE TABLE IF NOT EXISTS "Users" (
 		"login"	TEXT NOT NULL,

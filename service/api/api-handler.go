@@ -38,7 +38,7 @@ func (rt *_router) Handler() http.Handler {
 
 	// COMMENTI
 	rt.router.POST("/conversations/byid/:convid/message/:mesid/comment", rt.authControl(rt.commentMessage))
-	rt.router.DELETE("/conversations/byid/:convid/message/:mesid/comment/:commid", rt.authControl(rt.uncommentMessage))
+	rt.router.DELETE("/conversations/byid/:convid/message/:mesid/comment", rt.authControl(rt.uncommentMessage))
 
 	// Routes speciali
 	rt.router.GET("/liveness", rt.liveness)
