@@ -131,42 +131,54 @@
             async startForwardingSearch() {
                 this.selectedUsersList = [];
                 try {
-                    // carico lista utenti per l'inoltro
-                    let res = await this.$axios.get(`/users?search=`, { headers: { Authorization: "Bearer " + this.token } });
-                    this.selectedUsersList = Array.isArray(res.data) ? res.data : [res.data];
-                } catch (e) { this.errormsg = "Errore caricamento utenti"; }
+                    //  scarica lista Utenti
+                    let resUsers = await this.$axios.get(`/users?search=`, { headers: { Authorization: "Bearer " + this.token } });
+                    let users = Array.isArray(resUsers.data) ? resUsers.data : [resUsers.data];
+
+                    // scarica lista Conversazioni (Gruppi) esistenti
+                    let resConvs = await this.$axios.get(`/conversations`, { headers: { Authorization: "Bearer " + this.token } });
+                    let convs = resConvs.data || [];
+
+                    let groups = convs.filter(c => c.name).map(c => {
+                        return { name: c.name, isGroup: true, id: c.conid }; 
+                    });
+
+                    // Uniamo (Utenti + Gruppi)
+                    this.selectedUsersList = [...users, ...groups];
+
+                } catch (e) { 
+                    this.errormsg = "Errore caricamento destinatari"; 
+                }
             },
 
-            
-            async executeForward(users) {
+            // In Conversation.vue -> methods
+
+            async executeForward(selection) {
                 this.showForwardModal = false;
-                let targetUser = Array.isArray(users) ? users[0] : users;
+                let item = Array.isArray(selection) ? selection[0] : selection;
                 
-                if (!targetUser || !this.messageToForward) return;
+                if (!item || !this.messageToForward) return;
+                let dest = item.id ? item.id : (item.name ? item.name : item);
 
                 let formData = new FormData();
-                
-                // copio testo mess
                 if (this.messageToForward.text) {
                     formData.append('text', this.messageToForward.text);
                 }
                 formData.append('isforwarded', '1');
 
-
                 try {
-                    // invio chat destinazione 
                     await this.$axios.post(
-                        `/conversations?conversation=${targetUser}`, 
+                        `/conversations?conversation=${dest}`, 
                         formData, 
                         { headers: { Authorization: "Bearer " + this.token } }
                     );
 
-                    alert("Messaggio inoltrato a " + targetUser);
-
+                    alert("Messaggio inoltrato!");
                     this.messageToForward = null;
+                    this.refresh(); // aggiorna la chat corrente
 
                 } catch (e) {
-                    this.errormsg = "Errore durante l'inoltro: " + e.toString();
+                    this.errormsg = "Errore inoltro: " + e.toString();
                 }
             },
     
@@ -202,6 +214,7 @@
                     let res = await this.$axios.post(url, formData, { headers: { Authorization: "Bearer " + this.token } });
                     this.$emit('change-selected-conv', res.data);
                     this.replyToMessage = null;
+                    this.refresh();
                 } catch (e) { this.errormsg = "Errore invio: " + e.toString(); }
             },
     
@@ -254,7 +267,6 @@
                 // Chiudi il modale
                 this.showEmojiModal = false;
 
-                // 1. Controllo logico locale (opzionale, per UI immediata)
                 const existingReaction = this.selectedMessage.comments 
                     ? this.selectedMessage.comments.find(c => c.username === this.login && c.emoji === emojiChar)
                     : null;
@@ -264,15 +276,14 @@
 
                 try {
                     if (existingReaction) {
-                        // DELETE: Rimuovi reazione
+                        // DELETE: rimuovi reazione
                         await this.$axios.delete(
                             `/conversations/byid/${conid}/message/${mesid}/comment`, 
                             { headers: { Authorization: "Bearer " + this.token } }
                         );
 
                     } else {
-                        // POST: Aggiungi reazione
-                        // TORNATO ALL'ORIGINALE: Inviamo un JSON { "text": "👍" }
+                        // POST: aggiungi reazione
                         await this.$axios.post(
                             `/conversations/byid/${conid}/message/${mesid}/comment`, 
                             { text: emojiChar }, 
@@ -322,7 +333,42 @@
             toggleEmojiPopup(commId) {
                 let el = document.getElementById('co' + commId);
                 if(el) el.style.visibility = (el.style.visibility == 'visible') ? 'hidden' : 'visible';
+            },
+
+            // modifica nome gruppo
+            // MODIFICA QUESTA FUNZIONE IN Conversation.vue
+
+            async editGroupName() {
+                if (!this.selectedconvs) return;
+                
+                let newName = prompt("Inserisci nuovo nome gruppo:", this.selectedconvs.name);
+                
+                if (!newName || newName.trim() === "" || newName === this.selectedconvs.name) return;
+
+                try {
+
+                    await this.$axios.put(
+                        `/conversations/byid/${this.selectedconvs.conid}/name`, 
+                        {}, 
+                        { 
+                            params: { name: newName }, 
+                            headers: { Authorization: "Bearer " + this.token }
+                        }
+                    );
+                    
+                    this.selectedconvs.name = newName;
+                    this.refresh();
+                    
+                } catch (e) {
+                    console.error("Errore modifica:", e);
+
+                    let serverMessage = e.response && e.response.data ? JSON.stringify(e.response.data) : "";
+                    alert(`Errore Server (${e.response ? e.response.status : '?'}) ${serverMessage}`);
+                }
             }
+
+
+
         }
     }
 </script>
@@ -333,8 +379,13 @@
             <header class="chat-header">
                 <div class="header-content">
                     <div class="header-title text-truncate">
+                        <div class="small text-secondary" v-if="login">
+                            Loggato come: <strong>{{ login }}</strong>
+                        </div>
                         <h5 v-if="targetUserNewChat" class="m-0 text-warning">Nuova Chat: {{ targetUserNewChat }}</h5>
                         <h5 v-else-if="selectedconvs" class="m-0">{{ selectedconvs.name }}</h5>
+                        <button v-if="!targetUserNewChat" @click="editGroupName" class="btn-edit-group" title="Modifica nome">✏️</button>
+
                         <h5 v-else class="m-0">&nbsp;</h5>
                     </div>
                     <div class="header-actions">
@@ -486,7 +537,7 @@
     .chat-wrapper {
         display: flex;
         flex-direction: column;
-        height: 100vh;
+        height: 100dvh;
         background-color: #0f172a;
         color: #f1f5f9;
         overflow: hidden;

@@ -1,59 +1,79 @@
 <script>
-  import { ref, onMounted, getCurrentInstance } from 'vue';
-  import { useRouter } from 'vue-router';
-  
-  export default {
-      name: "LoginForm",
-      setup() {
-          const { proxy } = getCurrentInstance();
-          const $axios = proxy.$axios;
-          const router = useRouter();
-  
-          // state
-          const username = ref("");
-  
-          // metodi
-  
-          const login = async () => {
-              sessionStorage.removeItem('token');
-              try {
-                  let response = await $axios.post("/session", {
-                      name: username.value,
-                  });
-  
-                  if (response.status == 201) {
-                      sessionStorage.setItem('token', response.data.identifier);
-                      sessionStorage.setItem('login', username.value);
-                      router.push('/');
-                  }
-              } catch (e) {
-                  console.error(e.toString());
-              }
-          };
-  
-          const register = () => {
-              alert("");
-          };
-  
-          
-          onMounted(() => {
-              let init = 1000;
-              setTimeout(function() {
-                  // animazione di apertura
-                  const wrapper = document.querySelector(".login-wrapper");
-                  if(wrapper) wrapper.classList.toggle("open");
-                  init = 300;
-              }, init);
-          });
-  
-          return {
-              username,
-              login,
-              register
-          };
-      }
-  };
-  </script>
+    import { ref, onMounted, getCurrentInstance } from 'vue';
+    import { useRouter } from 'vue-router';
+    import ErrorMsg from '@/components/ErrorMsg.vue'; 
+    
+    export default {
+        name: "LoginForm",
+        components: {
+            ErrorMsg
+        },
+        setup() {
+            const { proxy } = getCurrentInstance();
+            const $axios = proxy.$axios;
+            const router = useRouter();
+    
+            // state
+            const username = ref("");
+            const errormsg = ref(""); 
+    
+            // metodi
+    
+            const login = async () => {
+                // resetta errore e token prima di provare
+                errormsg.value = "";
+                sessionStorage.removeItem('token');
+                
+                try {
+                    let response = await $axios.post("/session", {
+                        name: username.value,
+                    });
+    
+                    if (response.status == 201) {
+                        sessionStorage.setItem('token', response.data.identifier);
+                        sessionStorage.setItem('login', username.value);
+                        router.push('/');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    //  GESTIONE SPECIFICA DELL'ERRORE 
+                    if (e.response) {
+                        if (e.response.status === 400 || e.response.status === 409) {
+                            errormsg.value = "Questo nome utente è già in uso. Scegline un altro.";
+                        } else if (e.response.status === 500) {
+                            errormsg.value = "Errore del server.";
+                        } else {
+                            errormsg.value = "Errore login: " + e.response.status;
+                        }
+                    } else {
+                        errormsg.value = "Impossibile contattare il server.";
+                    }
+                }
+            };
+    
+            const register = () => {
+                alert("");
+            };
+    
+            
+            onMounted(() => {
+                let init = 1000;
+                setTimeout(function() {
+                    const wrapper = document.querySelector(".login-wrapper");
+                    if(wrapper) wrapper.classList.toggle("open");
+                    init = 300;
+                }, init);
+            });
+    
+            return {
+                username,
+                login,
+                register,
+                errormsg 
+            };
+        }
+    };
+    </script>
   
   <template>
       <div id="sandbox">
@@ -62,15 +82,18 @@
                   <img height="300" src="/wasatext_logo.png" alt="Logo">
               </div>
               <form class="login-right" @submit.prevent>
-                  <div class="h2">Bentornato!</div>
-                  <div class="form-group">
-                      <input type="text" id="username" placeholder=" " v-model="username">
-                      <label for="username">Username</label>
-                  </div>
-                  <div class="button-area">
-                      <button class="btn-login" @click="login()">Login</button>
-                  </div>
-              </form>
+                <div class="h2">Bentornato!</div>
+                    <div class="form-group">
+                        <input type="text" id="username" placeholder=" " v-model="username">
+                        <label for="username">Username</label>
+                    </div>
+
+                    <ErrorMsg v-if="errormsg" :msg="errormsg" />
+
+                <div class="button-area">
+        <button class="btn-login" @click="login()">Login</button>
+    </div>
+</form>
           </div>
       </div>
   </template>
