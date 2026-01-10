@@ -336,8 +336,6 @@
             },
 
             // modifica nome gruppo
-            // MODIFICA QUESTA FUNZIONE IN Conversation.vue
-
             async editGroupName() {
                 if (!this.selectedconvs) return;
                 
