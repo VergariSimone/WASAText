@@ -119,6 +119,7 @@
 			};
 	
 			// ricerca lista conversazioni sidebar 
+
 			const refresh = async (chooseFlag = true) => {
 				loading.value = true;
 				token.value = sessionStorage.getItem('token');
@@ -131,13 +132,20 @@
 					let response = await $axios.get("/conversations", config);
 					convs.items = response.data;
 				} catch (e) { errormsg.value = e.toString(); }
-	
-				// if ce una conv selezionata, ricaricala per vedere nuovi messaggi
+
+				//se una chat aperta, ricarichiamo  i suoi messaggi
 				if (selectedconvs.value) {
 					if (isPresent(selectedconvs.value.conid, convs)) {
-						// tiene la selezione 
-					} else if (convs.items.length > 0 && !selectedconvs.value) {
-						// seleziona la prima se nulla è selezioanto
+						// ricarica i dettagli della conversazione corrente (inclusi nuovi messaggi)
+						try {
+							let currentStart = sv.start || 0;
+							let currentLimit = sv.limit || 50;
+							let resDetail = await $axios.get(`/conversations/byid/${selectedconvs.value.conid}?start=${currentStart}&limit=${currentLimit}`, config);
+							// aggiorniamo l'oggetto selectedconvs con i nuovi dati
+							selectedconvs.value = resDetail.data;
+						} catch(e) { console.error("Autorefresh msg error", e); }
+					} else if (convs.items.length > 0) {
+						// ae la chat corrente non esiste più, seleziona la prima
 						selectedconvs.value = convs.items[0];
 						choose(convs.items[0].conid);
 					}
@@ -409,136 +417,148 @@
 	</template>
 	
 	<style>
-	
-	html, body {
-	  margin: 0; padding: 0; height: 100vh;
-	  background-color: #0f172a; color: #f1f5f9;
-	  overflow: hidden;
-	}
-	
-	.main-wrapper { height: 100vh; padding: 0; overflow: hidden; }
-	
-	/* sidebar */
-	#sidebarMenu {
-		background-color: #1e293b;
-		border-right: 1px solid #334155;
-		padding: 0;
-		height: 100vh;
-		display: flex;
-		flex-direction: column;
-	}
-	
-	#mycont {
-		flex-grow: 1;
-		overflow-y: auto;
-		padding: 10px 0;
-	}
-	#mycont::-webkit-scrollbar { width: 6px; }
-	#mycont::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 3px; }
-	
-	ul.no-bullets { list-style: none; padding: 0; margin: 0; }
-	
-	/* card conversazione */
-	div.conversation {
-		width: 95%; height: 72px;
-		display: flex; align-items: center;
-		background-color: transparent;
-		border-bottom: 1px solid #334155;
-		margin: 0 auto;
-		padding: 5px 10px;
-		border-radius: 8px;
-		transition: background 0.2s;
-	}
-	
-	div.conversation:hover, div.conversation.active {
-		background-color: #334155;
-		border-color: transparent;
-		cursor: pointer;
-	}
-	
-	div.chat { flex-grow: 1; display: flex; align-items: center; overflow: hidden; }
-	
-	img.chatimg {
-		height: 48px; width: 48px; min-width: 48px;
-		border-radius: 50%; object-fit: cover; margin-right: 12px;
-		border: 1px solid #475569;
-	}
-	
-	div.details {
-		display: flex; flex-direction: column; justify-content: center;
-		overflow: hidden; width: 100%;
-	}
-	
-	.firstline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
-	
-	.titlename { 
-		font-size: 0.95rem; font-weight: 600; color: #f1f5f9;
-		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-	}
-	.titledate { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; }
-	
-	.message {
-		font-size: 0.85rem; color: #cbd5e1;
-		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-	}
-	.message b { color: #5eead4; margin-right: 4px; font-weight: 500; }
-	
-	/* menu e badge */
-	.numandmenu {
-		display: flex; flex-direction: column; align-items: center;
-		width: 25px; margin-left: 5px;
-	}
-	
-	.menu:after {
-		content: '⋮'; font-size: 1.4rem; color: #64748b; margin-top: 5px; cursor: pointer;
-	}
-	div.conversation:hover .menu:after { color: #f1f5f9; }
-	
-	.number {
-		min-width: 18px; height: 18px; line-height: 18px;
-		border-radius: 9px; text-align: center; font-size: 0.7rem;
-		padding: 0 4px; margin-bottom: 2px;
-	}
-	.yes { background-color: #2dd4bf; color: #0f172a; font-weight: bold; }
-	
-	/* chat area */
-	.chat-area {
-		background-color: #0f172a;
-		height: 100vh;
-		border-left: 1px solid #334155;
-		position: relative;
-	}
-	
-	/* modali centrati*/
-	.modal-overlay {
-		position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-		background: rgba(0,0,0,0.7); z-index: 1050;
-		display: flex; justify-content: center; align-items: center;
-	}
-	.modal-box {
-		background: #1e293b; padding: 20px; border-radius: 10px;
-		width: 400px; max-width: 95%; max-height: 85vh;
-		border: 1px solid #475569; display: flex; flex-direction: column;
-	}
-	
-	/* overlay info  */
-	.overlayInfo {
-		z-index: 2000; transition: 0.3s opacity;
-		background: rgba(15, 23, 42, 0.95);
-		width: 100%; height: 100%; position: fixed; top: 0; left: 0;
-		display: flex; align-items: center; justify-content: center;
-	}
-	.hiddenInfo { opacity: 0; pointer-events: none; }
-	
-	/* context menu */
-	.vue-simple-context-menu {
-		background-color: #1e293b !important;
-		border: 1px solid #334155 !important;
-		border-radius: 6px !important;
-		box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;
-		padding: 5px 0 !important;
-	}
-	.vue-simple-context-menu__item { color: #f1f5f9 !important; padding: 8px 15px !important; }
-	.vue-simple-context-menu__item:hover { background-color: #334155 !important; color: #2dd4bf !important; }
-	.vue-simple-context-menu__divider { background-color: #475569 !important; }
-	</style>
+		html, body {
+		  margin: 0; padding: 0; 
+		  height: 100vh;      
+		  height: 100dvh;     
+		  width: 100vw;
+		  background-color: #0f172a; 
+		  color: #f1f5f9;
+		  overflow: hidden;   
+		  position: fixed;    
+		}
+		
+		.main-wrapper { 
+			height: 100vh;   
+			height: 100dvh;   
+			padding: 0; 
+			overflow: hidden; 
+		}
+		
+		/* sidebar */
+		#sidebarMenu {
+			background-color: #1e293b;
+			border-right: 1px solid #334155;
+			padding: 0;
+			height: 100vh;
+			height: 100dvh;
+			display: flex;
+			flex-direction: column;
+		}
+		
+		#mycont {
+			flex-grow: 1;
+			overflow-y: auto;
+			padding: 10px 0;
+		}
+		#mycont::-webkit-scrollbar { width: 6px; }
+		#mycont::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 3px; }
+		
+		ul.no-bullets { list-style: none; padding: 0; margin: 0; }
+		
+		/* card conversazione */
+		div.conversation {
+			width: 95%; height: 72px;
+			display: flex; align-items: center;
+			background-color: transparent;
+			border-bottom: 1px solid #334155;
+			margin: 0 auto;
+			padding: 5px 10px;
+			border-radius: 8px;
+			transition: background 0.2s;
+		}
+		
+		div.conversation:hover, div.conversation.active {
+			background-color: #334155;
+			border-color: transparent;
+			cursor: pointer;
+		}
+		
+		div.chat { flex-grow: 1; display: flex; align-items: center; overflow: hidden; }
+		
+		img.chatimg {
+			height: 48px; width: 48px; min-width: 48px;
+			border-radius: 50%; object-fit: cover; margin-right: 12px;
+			border: 1px solid #475569;
+		}
+		
+		div.details {
+			display: flex; flex-direction: column; justify-content: center;
+			overflow: hidden; width: 100%;
+		}
+		
+		.firstline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+		
+		.titlename { 
+			font-size: 0.95rem; font-weight: 600; color: #f1f5f9;
+			white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+		}
+		.titledate { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; }
+		
+		.message {
+			font-size: 0.85rem; color: #cbd5e1;
+			white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+		}
+		.message b { color: #5eead4; margin-right: 4px; font-weight: 500; }
+		
+		/* menu e badge */
+		.numandmenu {
+			display: flex; flex-direction: column; align-items: center;
+			width: 25px; margin-left: 5px;
+		}
+		
+		.menu:after {
+			content: '⋮'; font-size: 1.4rem; color: #64748b; margin-top: 5px; cursor: pointer;
+		}
+		div.conversation:hover .menu:after { color: #f1f5f9; }
+		
+		.number {
+			min-width: 18px; height: 18px; line-height: 18px;
+			border-radius: 9px; text-align: center; font-size: 0.7rem;
+			padding: 0 4px; margin-bottom: 2px;
+		}
+		.yes { background-color: #2dd4bf; color: #0f172a; font-weight: bold; }
+		
+		/* chat area */
+		.chat-area {
+			background-color: #0f172a;
+			height: 100vh; 
+			height: 100dvh; 
+			border-left: 1px solid #334155;
+			position: relative;
+			overflow: hidden; 
+		}
+		
+		/* modali centrati*/
+		.modal-overlay {
+			position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+			background: rgba(0,0,0,0.7); z-index: 1050;
+			display: flex; justify-content: center; align-items: center;
+		}
+		.modal-box {
+			background: #1e293b; padding: 20px; border-radius: 10px;
+			width: 400px; max-width: 95%; max-height: 85vh;
+			border: 1px solid #475569; display: flex; flex-direction: column;
+		}
+		
+		/* overlay info  */
+		.overlayInfo {
+			z-index: 2000; transition: 0.3s opacity;
+			background: rgba(15, 23, 42, 0.95);
+			width: 100%; height: 100%; position: fixed; top: 0; left: 0;
+			display: flex; align-items: center; justify-content: center;
+		}
+		.hiddenInfo { opacity: 0; pointer-events: none; }
+		
+		/* context menu */
+		.vue-simple-context-menu {
+			background-color: #1e293b !important;
+			border: 1px solid #334155 !important;
+			border-radius: 6px !important;
+			box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important;
+			padding: 5px 0 !important;
+		}
+		.vue-simple-context-menu__item { color: #f1f5f9 !important; padding: 8px 15px !important; }
+		.vue-simple-context-menu__item:hover { background-color: #334155 !important; color: #2dd4bf !important; }
+		.vue-simple-context-menu__divider { background-color: #475569 !important; }
+		</style>

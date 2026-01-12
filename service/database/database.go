@@ -75,14 +75,14 @@ func New(db *sql.DB) (AppDatabase, error) {
 		return nil, errors.New("database is required when creating AppDatabase")
 	}
 
-	// 1. Abilita le Foreign Keys
-	// Questo è spesso il primo punto dove si nota se il file non è accessibile,
-	// ma se main.go l'ha aperto, qui dovrebbe funzionare.
-	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		return nil, fmt.Errorf("errore durante l'abilitazione delle chiavi esterne: %w", err)
+	//  abilita le Foreign Keys
+	sqlStmt := `PRAGMA foreign_keys = ON`
+	_, ferr := db.Exec(sqlStmt)
+	if ferr != nil {
+		return nil, fmt.Errorf("errore durante abilitazione chiavi esterne  %w", ferr)
 	}
 
-	// 2. Crea le tabelle se non esistono
+	//  Crea le tabelle se non esistono
 	if err := createTables(db); err != nil {
 		return nil, fmt.Errorf("errore durante la creazione delle tabelle: %w", err)
 	}
@@ -123,8 +123,6 @@ func createTables(db *sql.DB) error {
 		return err
 	}
 
-	// Conversazione Default (0)
-	// Usa INSERT OR IGNORE per non dare errore se esiste già
 	queryInsertConv := `INSERT OR IGNORE INTO Conversations (id_con, category, name, photo) VALUES(0,'conversation', '', NULL);`
 	if _, err := db.Exec(queryInsertConv); err != nil {
 		return fmt.Errorf("errore init conversazione default: %w", err)

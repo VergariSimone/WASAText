@@ -64,6 +64,12 @@
               var files = e.target.files || e.dataTransfer.files;
               if (!files.length) return;
   
+              const file = files[0];
+              if (file.type !== 'image/gif') {
+                alert("Errore: Puoi caricare solo immagini GIF!");
+                return; 
+                }
+
               let config = {
                   headers: {
                       Authorization: "Bearer " + sessionStorage.getItem('token'),
