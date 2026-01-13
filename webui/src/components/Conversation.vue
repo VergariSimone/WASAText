@@ -109,24 +109,44 @@
                 try {
                     let res = await this.$axios.put(`/conversations/group?${out.join('&')}`, {}, { headers: { Authorization: "Bearer " + this.token } });
                     this.$emit('change-selected-conv-byid', res.data);
-                } catch (e) { this.errormsg = e.toString(); }
+                } catch (e) {
+                    if (e.response && (e.response.status === 400 || e.response.status === 409)) {
+                        this.errormsg = "Errore: Il nome del gruppo non è valido o esiste già.";
+                    } else {
+                        this.errormsg = "Errore creazione gruppo: " + e.message; 
+                    }
+                }
             },
 
             // Inoltro
             async startForwardingSearch() {
                 this.selectedUsersList = [];
                 try {
+                    // scarica lista Utenti
                     let resUsers = await this.$axios.get(`/users?search=`, { headers: { Authorization: "Bearer " + this.token } });
                     let users = Array.isArray(resUsers.data) ? resUsers.data : [resUsers.data];
-                    
+
+                    // scarica lista Conversazioni o gruppi esistenti
                     let resConvs = await this.$axios.get(`/conversations`, { headers: { Authorization: "Bearer " + this.token } });
                     let convs = resConvs.data || [];
+
+                    //  mappa i gruppi per ListUser 
                     let groups = convs.filter(c => c.name).map(c => {
-                        return { name: c.name + " (Gruppo)", isGroup: true, id: c.conid }; 
+                        return { 
+                            name: c.name + " (Gruppo)", 
+                            isGroup: true, 
+                            id: c.conid,
+                            photo: c.photo, 
+                            login: c.conid.toString() 
+                        }; 
                     });
 
+                    // (Utenti + Gruppi)
                     this.selectedUsersList = [...users, ...groups];
-                } catch (e) { this.errormsg = "Errore caricamento destinatari"; }
+
+                } catch (e) { 
+                    this.errormsg = "Errore caricamento destinatari"; 
+                }
             },
 
             async executeForward(selection) {
@@ -274,9 +294,15 @@
                         {}, 
                         { params: { name: newName }, headers: { Authorization: "Bearer " + this.token } }
                     );
-                    // Non mutiamo la prop localmente. Chiamiamo refresh che aggiornerà tutto dal server.
                     this.refresh();
-                } catch (e) { alert("Errore modifica nome: " + e.message); }
+                } catch (e) { console.errror("Errore modifica nome: " , e ); 
+                // GESTIONE CONFLITTO NOME
+                    if (e.response && (e.response.status === 400 || e.response.status === 409)) {
+                        alert("Errore: Impossibile rinominare. Il nome potrebbe essere già in uso.");
+                    } else {
+                        alert("Errore generico: " + e.message);
+                    }
+                }
             }
         }
     }
@@ -364,7 +390,7 @@
     .vue-simple-context-menu { position: fixed !important; z-index: 10000 !important; max-height: 100vh; overflow-y: auto; }
 </style>
 <style scoped>
-.chat-wrapper { display: flex; flex-direction: column; background-color: #0f172a; color: #f1f5f9; overflow: hidden; }
+.chat-wrapper { display: flex; height: 100%; flex-direction: column; background-color: #0f172a; color: #f1f5f9; overflow: hidden; }
 .chat-header { flex-shrink: 0; padding: 10px 15px; background-color: #1e293b; border-bottom: 1px solid #334155; }
 .header-content { display: flex; justify-content: space-between; align-items: center; }
 .chat-body { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; }
