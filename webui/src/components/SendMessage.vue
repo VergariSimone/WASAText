@@ -18,7 +18,7 @@
                 emojis: [
                     '😀', '😂', '😍', '🥺', '😎', '😭', '😡', '👍', '👎', '❤️', 
                     '🔥', '🎉', '👋', '🙏', '👀', '💩', '👻', '🤖', '💀', '🤡',
-                    '🌟', '🍕', '🍺', '🇮🇹', '🚀', '🙈', '🙉', '🙊'
+                    '🌟', '🍕', '🍺', '🇮🇹', '🚀', '🙈', '🙉', '🙉'
                 ]
             }
         },
@@ -57,15 +57,18 @@
             toggleImageMessage() {
                 this.showEmojiPicker = false; // chiude emoji
                 this.showImageMessage = !this.showImageMessage;
-                if (this.showImageMessage) {
-                    this.text = ""; // pulizia testo
-                }
+  
             },
     
             // callback che riceve i dati dal componente ImageMessage
             onImageReady(img, caption) {
-                // emette l'evento con immagine e testo
-                this.$emit('send-message', caption, img);
+                let finalCaption = caption;
+                if (!finalCaption && this.text) {
+                    finalCaption = this.text;
+                }
+
+                // emette l'evento con immagine e testo corretto
+                this.$emit('send-message', finalCaption, img);
                 
                 // chiude e resetta
                 this.showImageMessage = false;

@@ -15,10 +15,9 @@
             const $axios = proxy.$axios;
     
             const name = ref(null);
-            // Variabile per gestire l'anteprima locale
+            
             const previewImage = ref(null);
     
-            // Reset dell'anteprima quando cambia l'evento (es. upload completato o cambio chat)
             watch(() => props.ievent, () => {
                 previewImage.value = null;
             });
@@ -28,9 +27,10 @@
             };
     
             const errorName = (status) => {
-                if (status == 406) {
-                    alert("username non valido o gia esistente");
-                    return;
+                if (status == 406 || status === 409 || status === 400) {
+                    alert("Attenzione: Questo nome è già in uso o non valido.");
+                } else {
+                    alert("Errore sconosciuto durante il cambio nome.");
                 }
             };
     
