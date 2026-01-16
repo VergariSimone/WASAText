@@ -107,7 +107,9 @@
                          @click.stop="userChoose(u.login)">
                         
                         <div class="user-subcard">
-                            <img class="user-card-img" v-if="!u.photo" src="/standard.gif"/> <img class="user-card-img" v-else v-bind:src="'data:image/gif;base64,' + u.photo"/>
+                            <img class="user-card-img" v-if="!u.photo" src="/standard.gif"/>
+                            
+                            <img class="user-card-img" v-else v-bind:src="'data:' + (u.photo.startsWith('/9j/') ? 'image/jpeg' : (u.photo.startsWith('iVBOR') ? 'image/png' : 'image/gif')) + ';base64,' + u.photo"/>
                             
                             <div class="user-details">
                                 <div class="user-line">

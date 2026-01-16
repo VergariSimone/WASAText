@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// // Handler restituisce un'istanza di httprouter.Router che gestisce le API registrate qui
+// Handler restituisce un'istanza di httprouter.Router che gestisce le API registrate qui
 func (rt *_router) Handler() http.Handler {
 
 	// Registra routes

@@ -1,11 +1,11 @@
 package database
 
-// Riceve il login di un utente (name).
-//Genera un token univoco usando MD5 del login.
-//Controlla se l’utente esiste già nel database:
-//		Se sì → aggiorna il token esistente.
-//		Se no → crea un nuovo utente, cercando di usare eventuali valori precedenti di username e userphoto.
-//	Restituisce il token generato, pronto per l’uso in autenticazione.
+// riceve il login di un utente (name).
+// genera un token univoco usando MD5 del login.
+// controlla se l’utente esiste già nel database:
+//		se sì : aggiorna il token esistente.
+//		se no : crea un nuovo utente, cercando di usare eventuali valori precedenti di username e userphoto.
+//	restituisce il token generato, pronto per l’uso in autenticazione.
 
 import (
 	"crypto/md5"

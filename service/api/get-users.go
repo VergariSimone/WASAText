@@ -22,7 +22,7 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 	groups := false
 
 	if showgroups != "" && showgroups != "false" && showgroups != "true" {
-		// Il parametro ha un valore non accettabile → 406
+		// Il parametro ha un valore non accettabile : 406
 		http.Error(w, "", http.StatusNotAcceptable)
 		return
 	}
@@ -33,12 +33,12 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 	// QUERY AL DB
 	users, err := rt.db.GetUsers(token, fragment, groups)
 	if err != nil {
-		// Nessun risultato → 204 No Content
+		// Nessun risultato :204 No Content
 		if err.Error() == "sql: no rows in result set" {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-		// Errori generici → 400 Bad Request
+		// Errori generici : 400 Bad Request
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}

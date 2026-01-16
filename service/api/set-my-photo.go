@@ -18,8 +18,9 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 	// ESTRAZIONE TOKEN
 	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
-	// CONTROLLO DEL CONTENT-TYPE
-	if r.Header.Get("Content-Type") != "image/gif" {
+	// CONTROLLO CONTENT-TYPE (GIF, PNG o JPEG)
+	ct := r.Header.Get("Content-Type")
+	if ct != "image/gif" && ct != "image/png" && ct != "image/jpeg" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -34,13 +35,13 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, ps httprou
 	var u Userphoto
 	u.Photo = data
 
-	// VALIDAZIONE HEADER GIF E LUNGHEZZA
-	isGIF, err := regexp.MatchString(`^GIF`, string(u.Photo))
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if !isGIF || len(u.Photo) < 4 || len(u.Photo) > 524288 {
+	// VALIDAZIONE FORMATO 
+	isGIF, _ := regexp.MatchString(`^GIF`, string(u.Photo))
+	isPNG, _ := regexp.MatchString(`^\x89PNG`, string(u.Photo))
+	isJPG, _ := regexp.MatchString(`^\xff\xd8`, string(u.Photo))
+
+	// se non è nessuno dei tre formati, o se dimensioni errate -> 406
+	if (!isGIF && !isPNG && !isJPG) || len(u.Photo) < 4 || len(u.Photo) > 1048576 {
 		w.WriteHeader(http.StatusNotAcceptable)
 		return
 	}

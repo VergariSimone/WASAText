@@ -45,7 +45,7 @@ func (db *appdbimpl) SetConversation(token, category, receiver, convname string,
 	}
 
 	if count > 0 {
-		// Se esiste, restituisce id
+		// se esiste, restituisce id
 		err := db.c.QueryRow(`
 			SELECT uc1.id_con
 			FROM UsersConversations uc1, UsersConversations uc2, Conversations c
@@ -293,35 +293,31 @@ func (db *appdbimpl) ForwardMessage(token string, conID int, mesID int, forward 
 
 // cancella un messaggio di un utente
 func (db *appdbimpl) DeleteMessage(token string, mesID int, conID int) (int, error) {
-	// 1. Verifichiamo esistenza e proprietà in un colpo solo
-	// loginToCheck: il proprietario del messaggio
-	// userLogin: l'utente che sta facendo la richiesta (dal token)
+
 	var ownerLogin string
 	var requesterLogin string
 
-	// Troviamo chi sta facendo la richiesta
+	// trova chi sta facendo la richiesta
 	err := db.c.QueryRow(`SELECT login FROM Users WHERE token=?`, token).Scan(&requesterLogin)
 	if err != nil {
-		// Token non valido
-		return -1, nil // O return 0, err se preferisci 400
+		// token non valido
+		return -1, nil 
 	}
 
-	// Troviamo il proprietario del messaggio
+	// trova il proprietario del messaggio
 	err = db.c.QueryRow(`SELECT login FROM Messages WHERE id_msg=? AND id_con=?`, mesID, conID).Scan(&ownerLogin)
 	if err != nil {
 		// Se err è sql.ErrNoRows, il messaggio non esiste (o ID conv errato)
-		// Ritorniamo 0, nil per mandare un 404 Not Found
 		return 0, nil
 	}
 
-	// 2. Controllo Permessi
+	// controllo Permessi
 	if ownerLogin != requesterLogin {
-		// Il messaggio esiste ma non è tuo
-		// Ritorniamo -1, nil per mandare un 403 Forbidden
+		// messaggio esiste ma non è dell utente che vuole cancellarlo0
 		return -1, nil
 	}
 
-	// 3. Gestione Risposte (Logica "Soft Delete")
+	// gestione risposte 
 	var replyCount int
 	err = db.c.QueryRow(`SELECT COUNT(*) FROM Replyed WHERE id_msg_old=?`, mesID).Scan(&replyCount)
 	if err != nil {
@@ -329,30 +325,22 @@ func (db *appdbimpl) DeleteMessage(token string, mesID int, conID int) (int, err
 	}
 
 	if replyCount > 0 {
-		// SCENARIO A: Il messaggio ha delle risposte.
-		// Non lo cancelliamo fisicamente per non rompere il collegamento (FOREIGN KEY) o la visualizzazione della risposta.
-		// Lo "nascondiamo" dalla conversazione impostando id_con a 0 (o NULL se supportato).
 		_, err = db.c.Exec(`UPDATE Messages SET id_con=0 WHERE id_msg=?`, mesID)
 		if err != nil {
 			return 0, err
 		}
-
-		// Pulizia opzionale: rimuovi messaggi orfani che non hanno più risposte collegate
-		// (Questa query è pesante, valuta se farla qui o in un cron job separato, ma va bene tenerla)
 		_, err = db.c.Exec(`DELETE FROM Messages WHERE id_con=0 AND id_msg NOT IN (SELECT id_msg_old FROM Replyed)`)
 		if err != nil {
 			return 0, err
 		}
 	} else {
-		// SCENARIO B: Nessuna risposta, cancellazione fisica pulita.
 		_, err = db.c.Exec(`DELETE FROM Messages WHERE id_msg=?`, mesID)
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	// 4. Pulizia Conversazione (Se vuota)
-	// Controlliamo se sono rimasti messaggi in questa conversazione
+	// pulizia Conversazione (se vuota)
 	var remaining int
 	err = db.c.QueryRow(`SELECT COUNT(*) FROM Messages WHERE id_con=?`, conID).Scan(&remaining)
 	if err != nil {
@@ -360,44 +348,41 @@ func (db *appdbimpl) DeleteMessage(token string, mesID int, conID int) (int, err
 	}
 
 	if remaining == 0 {
-		// Se non ci sono più messaggi, cancelliamo l'intera conversazione
+		// se non ci sono più messaggi, cancella l'intera conversazione
 		_, err = db.c.Exec(`DELETE FROM Conversations WHERE id_con=?`, conID)
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	// 5. Successo
+	// success
 	return 1, nil
 }
 
 // aggiunge un commento a un messaggio
 func (db *appdbimpl) CommentMessage(mesID int, token string, emoji string) (int, error) {
 
-	// 1. RECUPERA PRIMA IL LOGIN (Più sicuro)
-	// Così se il token è sbagliato, ci fermiamo subito con un errore chiaro
+	// recupera prima del login cosi piu sicuro
 	var userLogin string
 	err := db.c.QueryRow(`SELECT login FROM "Users" WHERE token = ?`, token).Scan(&userLogin)
 	if err != nil {
-		return 0, err // Ritorna errore se utente non trovato
+		return 0, err // errore se utente non trovato
 	}
 
-	// 2. RIMUOVI COMMENTI PRECEDENTI
-	// Usiamo le virgolette "Comments" per sicurezza
+	// rimozione commenti precednenti 
 	_, err = db.c.Exec(`DELETE FROM "Comments" WHERE id_msg=? AND login=?`, mesID, userLogin)
 	if err != nil {
 		return 0, err
 	}
 
-	// 3. INSERISCI IL NUOVO COMMENTO
-	// Specifichiamo le colonne (id_msg, login, emoji) lasciando fare a SQLite l'ID automatico
+	// inserimento nuovo commento
 	res, err := db.c.Exec(`INSERT INTO "Comments" (id_msg, login, emoji) VALUES (?, ?, ?)`,
 		mesID, userLogin, emoji)
 	if err != nil {
 		return 0, err
 	}
 
-	// 4. RECUPERA L'ID CREATO
+	// recupero id creato
 	lastID, err := res.LastInsertId()
 	if err != nil {
 		return 0, err
@@ -411,8 +396,8 @@ func (db *appdbimpl) CommentMessage(mesID int, token string, emoji string) (int,
 // 0 = Nessun commento trovato da cancellare (o token non valido)
 func (db *appdbimpl) UncommentMessage(token string, mesid int) (int, error) {
 
-	// Eseguiamo la DELETE cercando la riga che corrisponde a quel messaggio
-	// E a quell'utente (tramite subquery sul token)
+	// esegue la DELETE cercando la riga che corrisponde a quel messaggio
+	// e a quell'utente (tramite subquery sul token)
 	res, err := db.c.Exec(`
         DELETE FROM "Comments" 
         WHERE id_msg = ? 
@@ -428,11 +413,11 @@ func (db *appdbimpl) UncommentMessage(token string, mesid int) (int, error) {
 		return 0, err
 	}
 
-	// Se abbiamo cancellato almeno una riga, ritorniamo 1 (Successo)
+	// se viene cancellata almeno una riga(successo)
 	if rowsAffected > 0 {
 		return 1, nil
 	}
 
-	// Se non abbiamo cancellato nulla (l'utente non aveva reagito o token errato), ritorniamo 0
+	// se non viene cancellato nulla (l'utente non aveva reagito o token errato)
 	return 0, nil
 }

@@ -71,8 +71,8 @@ func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps ht
 	}
 }
 
-// Funzione di supporto per leggere un parametro numerico dalla query string
-// Restituisce un valore di default se il parametro non esiste
+// funzione di supporto per leggere un parametro numerico dalla query string
+// eestituisce un valore di default se il parametro non esiste
 func parseQueryInt(r *http.Request, key string, defaultVal int) (int, error) {
 	val := r.URL.Query().Get(key)
 	if val == "" {

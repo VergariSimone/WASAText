@@ -60,6 +60,6 @@ func (rt *_router) setGroupName(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	/// OK 204
+	// OK 204
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -1,32 +1,9 @@
-
-# scarica l'immagine completa di Go che contiene compilatore e tool.
-# gli da il nome "builder" 
 FROM golang:1.19.1 As builder
-
-# crea e si sposta nella cartella di lavoro /src
 WORKDIR /src/
-
-# copia tutto il codice sorgente dal PC dentro l'immagine
 COPY . .
-
-# compiliamo il codice.
-# -o /app/webapi: dice di salvare il file eseguibile finale nella cartella /app chiamandolo 'webapi'
-# ./cmd/webapi: è il percorso dove si trova il main.go
 RUN go build -o /app/webapi ./cmd/webapi
-
-# un'immagine di base pulita (Debian Bookworm).
-# questa è molto più leggera 
 FROM debian:bookworm
-
-# il container ascolterà sulla porta 3000 
 EXPOSE 3000
-
-# si sposta nella cartella /app del nuovo container
 WORKDIR /app/
-
-# invece di copiare dal PC, copiamo il file '--from=builder' 
-# prende SOLO l'eseguibile compilato. Tutto il resto (codice sorgente, git, go) viene eliminato.
 COPY --from=builder /app/webapi ./
-
-# comando che partirà all'avvio del container
 CMD [ "/app/webapi" ]

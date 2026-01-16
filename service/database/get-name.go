@@ -24,19 +24,19 @@ type Cons struct {
 	ConId        int    `json:"conid"`
 	CategoryInfo string `json:"categoryinfo"`
 	Name         string `json:"name"`
-	Photo        string `json:"photo"` // binhex
+	Photo        string `json:"photo"` 
 	Sender       string `json:"sender"`
 	Toread       string `json:"toread"`
 	Mtimestamp   string `json:"mtimestamp"`
 	Mtext        string `json:"mtext"`
-	Mphoto       string `json:"mphoto"` // binhex
+	Mphoto       string `json:"mphoto"` 
 	Mcategory    string `json:"mcategory"`
 }
 
 type Convers struct {
 	Conid        int    `json:"conid"`
 	Name         string `json:"name"`
-	Photo        string `json:"photo"` // binhex
+	Photo        string `json:"photo"` 
 	Users        []Us   `json:"user"`
 	CategoryInfo string `json:"categoryinfo"`
 	Messages     []Mes  `json:"message"`
@@ -45,7 +45,7 @@ type Convers struct {
 type ConInfo struct {
 	Conid        int    `json:"conid"`
 	Name         string `json:"name"`
-	Photo        string `json:"photo"` // binhex
+	Photo        string `json:"photo"` 
 	Users        []Us   `json:"user"`
 	CategoryInfo string `json:"categoryinfo"`
 }
@@ -55,13 +55,13 @@ type Mes struct {
 	Conid           int        `json:"conid"`
 	Timestamp       string     `json:"timestamp"`
 	Text            string     `json:"text"`
-	Photo           string     `json:"photo"` // binhex
+	Photo           string     `json:"photo"` 
 	Username        string     `json:"username"`
 	Login           string     `json:"login"`
 	Category        string     `json:"category"`
 	IsForwarded     int        `json:"isforwarded"`
 	ReplyedText     string     `json:"replyedtext"`
-	ReplyedPhoto    string     `json:"replyedphoto"` // binhex
+	ReplyedPhoto    string     `json:"replyedphoto"` 
 	ReplyedUsername string     `json:"replyedusername"`
 	ReceivedArray   []Received `json:"receivedarray"`
 	ReadArray       []Read     `json:"readarray"`
@@ -78,13 +78,13 @@ type Comm struct {
 type Us struct {
 	Login string `json:"login"`
 	Name  string `json:"name"`
-	Photo string `json:"photo"` // binhex
+	Photo string `json:"photo"` 
 }
 
 type Usrs struct {
 	Login        string `json:"login"`
 	Name         string `json:"name"`
-	Photo        string `json:"photo"` // binhex
+	Photo        string `json:"photo"` 
 	CategoryInfo string `json:"categoryinfo"`
 }
 
@@ -97,13 +97,13 @@ func (db *appdbimpl) GetName(token string) (string, error) {
 	return name, err
 }
 
-// restituisce tutti gli utenti (opzionalmente anche i gruppi) filtrando per search
+// restituisce tutti gli utenti  filtrando per search
 func (db *appdbimpl) GetUsers(token string, search string, groups bool) ([]Usrs, error) {
 	var allusers []Usrs
 	var p []byte
 	var query, groupQuery string
 
-	// Se vogliamo includere anche i gruppi
+	// se vogliamo includere anche i gruppi
 	if groups {
 		groupQuery = ` UNION 
 			SELECT DISTINCT c.id_con LL, c.name NN, coalesce(c.photo, '') PP, 'group' CC
@@ -134,7 +134,7 @@ func (db *appdbimpl) GetUsers(token string, search string, groups bool) ([]Usrs,
 		if err := rows.Scan(&user.Login, &user.Name, &p, &user.CategoryInfo); err != nil {
 			return allusers, err
 		}
-		// CONVERSIONE FOTO IN BINHEX
+		// conv foto in binhex
 		user.Photo = hex.EncodeToString(p)
 		allusers = append(allusers, user)
 	}
@@ -304,7 +304,7 @@ func (db *appdbimpl) IsAGroup(token string, conid int) error {
 	return fmt.Errorf("non è un gruppo")
 }
 
-// restituisce info conversazione + messaggi (paginati) e li segna come letti/ricevuti
+// restituisce info conversazione + messaggi e li segna come letti/ricevuti
 func (db *appdbimpl) GetConversation(conid int, start int, limit int, token string) (Convers, error) {
 	con := Convers{}
 	err := db.c.QueryRow(`SELECT category, 

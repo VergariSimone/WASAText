@@ -21,8 +21,9 @@ func (rt *_router) setGroupPhoto(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	// VERIFICA DEL TIPO
-	if ct := r.Header.Get("Content-type"); ct != "image/gif" {
+	//  VERIFICA DEL TIPO (GIF, PNG o JPEG)
+	ct := r.Header.Get("Content-type")
+	if ct != "image/gif" && ct != "image/png" && ct != "image/jpeg" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -34,16 +35,19 @@ func (rt *_router) setGroupPhoto(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	// VALIDAZIONE GIF
-	isGifHeader, err := regexp.Match(`^GIF`, fileBytes)
-	if err != nil || !isGifHeader {
+	// VALIDAZIONE FORMATO
+	isGifHeader, _ := regexp.Match(`^GIF`, fileBytes)
+	isPngHeader, _ := regexp.Match(`^\x89PNG`, fileBytes)
+	isJpgHeader, _ := regexp.Match(`^\xff\xd8`, fileBytes)
+
+	if (!isGifHeader && !isPngHeader && !isJpgHeader) {
 		w.WriteHeader(http.StatusNotAcceptable)
 		return
 	}
 
 	// RIDUCIAMO LUNGHEZZA CONTROLLANDO IL BUFFER
 	fileLen := len(fileBytes)
-	if fileLen < 4 || fileLen > 524288 {
+	if fileLen < 4 || fileLen > 1048576 {
 		w.WriteHeader(http.StatusNotAcceptable)
 		return
 	}

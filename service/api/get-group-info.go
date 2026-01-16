@@ -19,7 +19,7 @@ func (rt *_router) getGroupInfo(w http.ResponseWriter, r *http.Request, ps httpr
 	// LETTURA E VALID CONV
 	convid, err := strconv.Atoi(ps.ByName("convid"))
 	if err != nil {
-		// ID non valido → 400
+		// ID non valido : 400
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
@@ -31,7 +31,7 @@ func (rt *_router) getGroupInfo(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	if err := rt.db.IsAGroup(token, convid); err != nil {
-		// Non è un gruppo → 406 Not Acceptable
+		// non è un gruppo : 406 non accettabile
 		http.Error(w, "", http.StatusNotAcceptable)
 		return
 	}
@@ -39,7 +39,7 @@ func (rt *_router) getGroupInfo(w http.ResponseWriter, r *http.Request, ps httpr
 	// RECUPERO INFO GRUPPO
 	groupInfo, err := rt.db.GetGroupInfo(convid)
 	if err != nil {
-		// Errore nella query → 400 Bad Request
+		// errore query  400 Bad Request
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}

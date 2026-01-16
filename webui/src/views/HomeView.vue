@@ -331,7 +331,8 @@
 									
 									<div class="chat">
 										<img class="chatimg" v-if="!cvs.photo" src="/standard.gif"/>
-										<img class="chatimg" v-else :src="'data:image/gif;base64,' + cvs.photo"/>
+										
+                                        <img class="chatimg" v-else :src="'data:' + (cvs.photo.startsWith('/9j/') ? 'image/jpeg' : (cvs.photo.startsWith('iVBOR') ? 'image/png' : 'image/gif')) + ';base64,' + cvs.photo"/>
 										
 										<div class="details">
 											<div class="firstline">
