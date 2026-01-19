@@ -1,4 +1,7 @@
 <script>
+    // L'utente inserisce lo username in LoginView.vue. 
+    // al click viene inviata una richiesta POST /session. Se successo, 
+    // il token ricevuto viene salvato in sessionStorage.
     import { ref, onMounted, getCurrentInstance } from 'vue';
     import { useRouter } from 'vue-router';
     import ErrorMsg from '@/components/ErrorMsg.vue'; 
@@ -110,7 +113,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      /* Gradiente scuro elegante */
+      /* Gradiente scuro */
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       overflow: hidden;
   }
@@ -224,7 +227,7 @@
       padding: 0 4px;
   }
   
-  /* input ha focus o non è vuoto (u */
+  /* input ha focus o non è vuoto  */
   input:focus + label,
   input:not(:placeholder-shown) + label {
       top: 0;

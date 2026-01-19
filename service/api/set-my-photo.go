@@ -12,7 +12,7 @@ import (
 type Userphoto struct {
 	Photo []byte
 }
-
+// legge i bytes finali del file per assicurarsi che sia veramente una GIF, PNG o JPEG prima di salvarlo
 func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// ESTRAZIONE TOKEN

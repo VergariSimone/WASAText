@@ -13,6 +13,7 @@ type Username struct {
 	Name string
 }
 
+//  verifica che il nuovo nome non sia già in uso e rispetta il formato richiesto
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// ESTRAZIONE TOKEN

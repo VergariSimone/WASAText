@@ -10,7 +10,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 )
-
+// gestisce la logica: se il destinatario è uno username, crea automaticamente la conversazione; se è un ID, usa quella esistente. Applica limiti di dimensione
 func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	w.Header().Set("content-type", "application/json")

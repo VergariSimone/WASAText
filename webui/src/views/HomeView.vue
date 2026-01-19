@@ -6,6 +6,8 @@
 	import Conversation from '../components/Conversation.vue';
 	import VueSimpleContextMenu from 'vue-simple-context-menu';
 	
+	// POLLING : utilizza un timer  che chiama la funzione refresh() ogni 5 secondi per scaricare nuovi dati
+
 	export default {
 		components: {
 			'setinfo': SetInfo,

@@ -1,6 +1,6 @@
 <script>
     import ImageMessage from '../components/ImageMessage.vue';
-    
+    // costruisce un oggetto FormData per inviare testo e/o immagini in una singola richiesta multipart/form-data
     export default {
         name: 'SendMessage',
         components: {

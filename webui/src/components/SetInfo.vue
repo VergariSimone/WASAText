@@ -1,6 +1,7 @@
 <script>
     import { ref, getCurrentInstance, watch } from 'vue';
     
+    
     export default {
         props: ['itype', 'ievent'],
         emits: ['set-info', 'close-info'],
@@ -20,6 +21,7 @@
                 }
             };
     
+            // modifica username invia una PUT /info/username
             const setName = async () => {
                 name.value = document.getElementById("iname").value;
                 let config = { headers: { Authorization: "Bearer " + sessionStorage.getItem('token') } };
@@ -35,26 +37,26 @@
                 }
             };
     
-            // --- FUNZIONE UPLOAD FLESSIBILE ---
+            // permette l'upload, mostra un'anteprima locale e invia il file via PUT /info/userphoto
             const setPhoto = async (e) => {
                 var files = e.target.files || e.dataTransfer.files;
                 if (!files.length) return;
     
                 const file = files[0];
     
-                // 1. Validazione Frontend: Accetta GIF, PNG, JPEG
+                // validazione  
                 const validTypes = ['image/gif', 'image/png', 'image/jpeg'];
                 if (!validTypes.includes(file.type)) {
                     alert("Formato non supportato. Usa GIF, PNG o JPG.");
                     return;
                 }
     
-                // 2. Anteprima Immediata
+                
                 const reader = new FileReader();
                 reader.onload = (ev) => { previewImage.value = ev.target.result; };
                 reader.readAsDataURL(file);
     
-                // 3. Header Dinamico (Dice al server il tipo reale del file)
+                
                 let config = {
                     headers: {
                         Authorization: "Bearer " + sessionStorage.getItem('token'),
@@ -123,7 +125,6 @@
     </template>
     
     <style scoped>
-    /* Stili originali invariati */
     .icontainer { display: grid; grid-template-columns: 20% 50% 30%; position: relative; top: 50px; background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); color: #f1f5f9; width: fit-content; margin: 0 auto; align-items: center; gap: 10px; }
     .icontainer h5 { color: #2dd4bf; font-weight: 700; grid-column: 2; text-align: center; margin-bottom: 20px; }
     .infoname { text-align: right; font-weight: 600; color: #94a3b8; padding-right: 10px; }

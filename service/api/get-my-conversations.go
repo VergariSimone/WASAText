@@ -7,7 +7,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 )
-
+// restituisce la lista delle chat ordinata per timestamp decrescente, includendo l'anteprima dell'ultimo messaggio e il contatore dei messaggi non letti (toread)
 func (rt *_router) getMyConversations(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	w.Header().Set("Content-Type", "application/json")
