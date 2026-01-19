@@ -119,7 +119,7 @@
       position: fixed;
       width: 340px;
       height: fit-content;
-      z-index: 1001; /* sopra tutto */
+      z-index: 1001; 
       top: 200px;
       left: 50%;
       transform: translateX(-50%); /* centrato orizzontalmente */

@@ -182,7 +182,6 @@
                     let res = await this.$axios.post(`/conversations?conversation=${this.targetUserNewChat}`, formData, { headers: { Authorization: "Bearer " + this.token } });
                     this.targetUserNewChat = null;
                     this.$emit('change-selected-conv', res.data);
-                    // IMPORTANTE: Forza refresh lato home
                     this.refresh();
                 } catch (e) { this.errormsg = "Errore invio: " + e.toString(); }
             },
@@ -197,7 +196,6 @@
                     let res = await this.$axios.post(url, formData, { headers: { Authorization: "Bearer " + this.token } });
                     this.$emit('change-selected-conv', res.data);
                     this.replyToMessage = null;
-                    // IMPORTANTE: Forza refresh lato home
                     this.refresh();
                 } catch (e) { this.errormsg = "Errore invio: " + e.toString(); }
             },
@@ -252,8 +250,6 @@
                             { headers: { Authorization: "Bearer " + this.token } }
                         );
                     }
-                    
-                    // Aggiorna la chat per vedere la reazione apparire
                     this.refresh(); 
 
                 } catch (e) { 
@@ -283,7 +279,6 @@
                 if(el) el.style.visibility = (el.style.visibility == 'visible') ? 'hidden' : 'visible';
             },
 
-            // EDIT GRUPPO (FIX: Query Param + No Mutazione Prop)
             async editGroupName() {
                 if (!this.selectedconvs) return;
                 let newName = prompt("Nuovo nome gruppo:", this.selectedconvs.name);

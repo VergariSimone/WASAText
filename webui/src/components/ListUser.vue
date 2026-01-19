@@ -214,7 +214,7 @@
     /* lista scrollabile*/
     .listcontext {
         overflow-y: auto;
-        flex-grow: 1; /* occupa lo spazio rimanente */
+        flex-grow: 1; 
         margin-top: 5px;
         border: 1px solid #334155;
         border-radius: 8px;
@@ -249,7 +249,7 @@
     
     /* selezione attivata */
     .user-card-selected {
-        background-color: rgba(13, 148, 136, 0.2) !important; /* Verde scuro trasparente */
+        background-color: rgba(13, 148, 136, 0.2) !important; 
         border-color: #2dd4bf !important;
     }
     
