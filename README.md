@@ -1,115 +1,99 @@
-# Fantastic coffee (decaffeinated)
+# 💬 WasaText
 
-This repository contains the basic structure for [Web and Software Architecture](http://gamificationlab.uniroma1.it/en/wasa/) homework project.
-It has been described in class.
+**WasaText** è un'applicazione di messaggistica istantanea web-based, sviluppata come progetto universitario per il corso di "Web and Software Architecture" (WASA). L'applicazione permette agli utenti di scambiarsi messaggi testuali e immagini in tempo reale, gestire conversazioni singole e di gruppo.
 
-"Fantastic coffee (decaffeinated)" is a simplified version for the WASA course, not suitable for a production environment.
-The full version can be found in the "Fantastic Coffee" repository.
 
-## Project structure
+## 🚀 Funzionalità Principali
 
-* `cmd/` contains all executables; Go programs here should only do "executable-stuff", like reading options from the CLI/env, etc.
-	* `cmd/healthcheck` is an example of a daemon for checking the health of servers daemons; useful when the hypervisor is not providing HTTP readiness/liveness probes (e.g., Docker engine)
-	* `cmd/webapi` contains an example of a web API server daemon
-* `demo/` contains a demo config file
-* `doc/` contains the documentation (usually, for APIs, this means an OpenAPI file)
-* `service/` has all packages for implementing project-specific functionalities
-	* `service/api` contains an example of an API server
-	* `service/globaltime` contains a wrapper package for `time.Time` (useful in unit testing)
-* `vendor/` is managed by Go, and contains a copy of all dependencies
-* `webui/` is an example of a web frontend in Vue.js; it includes:
-	* Bootstrap JavaScript framework
-	* a customized version of "Bootstrap dashboard" template
-	* feather icons as SVG
-	* Go code for release embedding
+L'applicazione offre un set completo di funzionalità social:
 
-Other project files include:
-* `open-node.sh` starts a new (temporary) container using `node:20` image for safe and secure web frontend development (you don't want to use `node` in your system, do you?).
+* **Autenticazione:** Login semplificato (basato su username).
+* **Chat 1-to-1:** Messaggistica privata diretta tra utenti.
+* **Gruppi:**
+    * Creazione di gruppi.
+    * Aggiunta di partecipanti.
+    * Modifica nome e foto del gruppo.
+    * Possibilità di abbandonare i gruppi.
+* **Messaggi Multimediali:** Supporto per l'invio di immagini (GIF, PNG, JPG).
+* **Interazioni Avanzate:**
+    * Risposte ai messaggi (Reply).
+    * Inoltro messaggi (Forward).
+    * Eliminazione messaggi (Delete).
+    * Reazioni/Commenti con emoji.
+* **Stato Messaggi:** Visualizzazione ricevute di lettura.
+* **Profilo Utente:** Modifica del nome utente e della foto profilo personalizzata.
 
-## Go vendoring
+## 🛠️ Tecnologie Utilizzate
 
-This project uses [Go Vendoring](https://go.dev/ref/mod#vendoring). You must use `go mod vendor` after changing some dependency (`go get` or `go mod tidy`) and add all files under `vendor/` directory in your commit.
+Il progetto è costruito utilizzando un'architettura a microservizi containerizzata.
 
-For more information about vendoring:
+### Backend
+* **Linguaggio:** [Go (Golang)](https://go.dev/)
+* **Router:** `julienschmidt/httprouter`
+* **Database:** SQLite (Embedded)
+* **Design:** API RESTful
 
-* https://go.dev/ref/mod#vendoring
-* https://www.ardanlabs.com/blog/2020/04/modules-06-vendoring.html
+### Frontend
+* **Framework:** [Vue.js 3](https://vuejs.org/)
+* **Build Tool:** Yarn / Webpack
+* **Stile:** CSS3 Custom & Responsive Design
 
-## Node/YARN vendoring
+### DevOps & Deployment
+* **Containerization:** Docker
+* **Orchestration:** Docker Compose
+* **Web Server:** Nginx (per servire il frontend in produzione)
 
-This repository uses `yarn` and a vendoring technique that exploits the ["Offline mirror"](https://yarnpkg.com/features/caching). As for the Go vendoring, the dependencies are inside the repository.
+## 📋 Prerequisiti
 
-You should commit the files inside the `.yarn` directory.
+Per eseguire il progetto in locale, assicurati di avere installato:
 
-## How to set up a new project from this template
+* [Docker](https://www.docker.com/products/docker-desktop)
+* [Docker Compose](https://docs.docker.com/compose/install/)
 
-You need to:
+## ⚡ Installazione e Avvio
 
-* Change the Go module path to your module path in `go.mod`, `go.sum`, and in `*.go` files around the project
-* Rewrite the API documentation `doc/api.yaml`
-* If no web frontend is expected, remove `webui` and `cmd/webapi/register-webui.go`
-* Update top/package comment inside `cmd/webapi/main.go` to reflect the actual project usage, goal, and general info
-* Update the code in `run()` function (`cmd/webapi/main.go`) to connect to databases or external resources
-* Write API code inside `service/api`, and create any further package inside `service/` (or subdirectories)
+Grazie a Docker, l'avvio dell'applicazione è immediato e non richiede l'installazione locale di Go o Node.js.
 
-## How to build
+1.  **Clona il repository:**
+    ```bash
+    git clone [https://github.com/tuo-username/wasatext.git](https://github.com/tuo-username/wasatext.git)
+    cd wasatext
+    ```
 
-If you're not using the WebUI, or if you don't want to embed the WebUI into the final executable, then:
+2.  **Avvia i container (Backend + Frontend):**
+    Esegui il comando di build e start:
+    ```bash
+    docker-compose up --build
+    ```
+    *Il flag `--build` assicura che eventuali modifiche al codice vengano ricompilate.*
 
-```shell
-go build ./cmd/webapi/
-```
+3.  **Accedi all'applicazione:**
+    Una volta terminato l'avvio, apri il browser ai seguenti indirizzi:
 
-If you're using the WebUI and you want to embed it into the final executable:
+    * **Frontend (App):** [http://localhost:8080](http://localhost:8080)
+    * **Backend (API):** [http://localhost:3000](http://localhost:3000)
 
-```shell
-./open-node.sh
-# (here you're inside the container)
-yarn run build-embed
-exit
-# (outside the container)
-go build -tags webui ./cmd/webapi/
-```
+4.  **Arrestare l'applicazione:**
+    Per fermare i container e rimuovere le risorse temporanee:
+    ```bash
+    docker-compose down
+    ```
 
-## How to run (in development mode)
+## 📂 Struttura del Progetto
 
-You can launch the backend only using:
-
-```shell
-go run ./cmd/webapi/
-```
-
-If you want to launch the WebUI, open a new tab and launch:
-
-```shell
-./open-node.sh
-# (here you're inside the container)
-yarn run dev
-```
-
-## How to build for production / homework delivery
-
-```shell
-./open-node.sh
-# (here you're inside the container)
-yarn run build-prod
-```
-
-For "Web and Software Architecture" students: before committing and pushing your work for grading, please read the section below named "My build works when I use `yarn run dev`, however there is a Javascript crash in production/grading"
-
-## Known issues
-
-### My build works when I use `yarn run dev`, however there is a Javascript crash in production/grading
-
-Some errors in the code are somehow not shown in `vite` development mode. To preview the code that will be used in production/grading settings, use the following commands:
-
-```shell
-./open-node.sh
-# (here you're inside the container)
-yarn run build-prod
-yarn run preview
-```
-
-## License
-
-See [LICENSE](LICENSE).
+```text
+wasatext/
+├── cmd/                # Entry point del backend Go
+├── service/            # Logica di business e API
+│   ├── api/            # Handler REST (es. set-my-photo.go, set-token.go)
+│   ├── database/       # Gestione DB SQLite e Query (es. database.go)
+│   └── ...
+├── webui/              # Codice sorgente Frontend (Vue.js)
+│   ├── src/
+│   │   ├── components/ # Componenti Vue (es. ListUser.vue, Conversation.vue)
+│   │   ├── views/      # Pagine principali (es. HomeView.vue)
+│   │   └── ...
+├── Dockerfile.backend  # Configurazione build Backend
+├── Dockerfile.frontend # Configurazione build Frontend (Multi-stage)
+├── docker-compose.yml  # Orchestrazione servizi
+└── README.md           # Questo file
