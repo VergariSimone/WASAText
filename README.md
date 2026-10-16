@@ -56,7 +56,7 @@ Grazie a Docker, l'avvio dell'applicazione è immediato e non richiede l'install
 
 1.  **Clona il repository:**
     ```bash
-    git clone [https://github.com/tuo-username/wasatext.git](https://github.com/tuo-username/wasatext.git)
+    git clone [https://github.com/VergariSimone/wasatext.git](https://github.com/VergariSimone/wasatext.git)
     cd wasatext
     ```
 
